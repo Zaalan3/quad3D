@@ -41,6 +41,8 @@ void cacheObject(uint8_t object) {
 		int dx = vt2.xs - vt0.xs;
 		int dy = vt2.ys - vt0.ys;
 		
+		if(dx*(cy-by) + dy*(bx - cx) > 0) 
+			continue;
 		
 		int tax = vt0.xs - vt1.xs - vt3.xs + vt2.xs;
 		int tay = vt0.ys - vt1.ys - vt3.ys + vt2.ys;

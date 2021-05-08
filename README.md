@@ -1,2 +1,5 @@
-# quad3D
-3D Engine for the TI-84+CE
+### Quad3D 
+
+A WIP 3D engine for the TI84+CE utilyzing a forward quad renderer. 
+
+Includes C usage example.

@@ -29,8 +29,6 @@ void cacheObject(uint8_t object) {
 		vt3 = vertexCache[obj->face[i].vt3];
 			
 
-		if ((vt0.outcode&vt1.outcode&vt2.outcode&vt3.outcode) != 0) 
-			continue;
 		if ((vt0.outcode|vt1.outcode|vt2.outcode|vt3.outcode) == OOB)
 			continue;
 		

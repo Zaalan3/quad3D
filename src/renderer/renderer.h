@@ -1,0 +1,57 @@
+#ifndef renderer_3d_define 
+#define renderer_3d_define
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <tice.h>
+#include <compression.h>
+
+#include "fxmath.h"
+#include "def3d.h" 
+#include "matrix.h"
+
+#define loadTextureMapCompressed(ptr) zx7_Decompress((void *)0xD48000,(void *)ptr)
+
+// camera matrix
+extern translation_matrix_t cameraMatrix; 
+
+// active object list
+extern uint8_t numObjects;
+extern object_t* activeObject[64];
+
+// processed vertices
+extern vertex_cached_t vertexCache[512]; 
+
+// visible faces cache
+extern uint24_t numFaces;
+extern face_cached_t faceCache[1024]; 
+
+// 128 depth buckets with 32 entries each
+// ~8 kb
+extern uint8_t numBucketedFaces[128];
+extern uint16_t faceBucket[128][32];
+
+// initializes renderer
+void initRenderer(void); 
+
+// resets renderer
+void closeRenderer(void);
+
+// blits the Canvas to the Screen. 
+void blitCanvas(void); 
+
+// clears the canvas
+void clearCanvas(void); 
+
+// renders objects to canvas
+void renderObjects(void);
+
+#define setCameraAngle(ax,ay,az) eulerToMatrix(&cameraMatrix,ax,ay,az) 
+
+// sets the camera's position 
+void setCameraPosition(vertex_t* position); 
+
+
+#endif

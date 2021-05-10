@@ -42,7 +42,7 @@ _bilerp32:
 	add a,$80
 	ld h,a
 	ld de,$D40000 
-	ld bc,$8FF 
+	ld b,8
 	exx 
 	
 	ld de,(by) 
@@ -94,7 +94,7 @@ repeat 4
 	ld e,iyh
 	ld a,(hl) 
 	ld (de),a 
-	inc hl 
+	inc l 
 end repeat
 	djnz uloop 
 	exx 
@@ -123,7 +123,7 @@ SMCloadCX:=$-3
 	push iy 
 	push hl  
 	exx 
-	ld bc,$8FF
+	ld b,8
 	ld l,0
 SMCloadU:=$-1 
 	inc h 

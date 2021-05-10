@@ -6,16 +6,10 @@ public canvas
 public canvas_width
 public canvas_height
 
-public _numBucketedFaces
-public _faceBucket
-
 canvas:=$D40000
 canvas_width:=160 
 canvas_height:=120 
 canvas_offset:=48
-
-_faceBucket:=$D50000 
-_numBucketedFaces:=$D52000 
 
 screen:=$D52C00 
 

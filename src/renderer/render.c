@@ -28,8 +28,9 @@ void cacheObject(uint8_t object) {
 		vt2 = vertexCache[obj->face[i].vt2]; 
 		vt3 = vertexCache[obj->face[i].vt3];
 			
-
 		if ((vt0.outcode|vt1.outcode|vt2.outcode|vt3.outcode) == OOB)
+			continue;
+		if ((vt0.outcode&vt1.outcode&vt2.outcode&vt3.outcode)) 
 			continue;
 		
 		int bx = vt3.xs - vt0.xs; 
@@ -39,13 +40,15 @@ void cacheObject(uint8_t object) {
 		int dx = vt2.xs - vt0.xs;
 		int dy = vt2.ys - vt0.ys;
 		
-		if(dx*(cy-by) + dy*(bx - cx) > 0) 
+		int area = dx*(cy-by) + dy*(bx - cx);
+		if(area > 0) 
 			continue;
+		
 		
 		int tax = vt0.xs - vt1.xs - vt3.xs + vt2.xs;
 		int tay = vt0.ys - vt1.ys - vt3.ys + vt2.ys;
-
-		uint8_t davg = (vt0.depth + vt1.depth + vt2.depth + vt3.depth)>>2;
+		// sum of distances. Allows for better bucketing (think of it like an 8.2 depth average)
+		int dsum = vt0.depth + vt1.depth + vt2.depth + vt3.depth - 1;
 		
 		uint16_t index = numFaces++;
 		
@@ -61,23 +64,34 @@ void cacheObject(uint8_t object) {
 		faceCache[index].by = by*8; 
 		faceCache[index].cx = cx*8; 
 		faceCache[index].cy = cy*8; 
+		faceCache[index].next = faceBucket[dsum]; 
+		faceBucket[dsum] = index;
 		
-		faceBucket[davg][numBucketedFaces[davg]++] = index;
+		if(bucketMax<dsum) 
+			bucketMax=dsum;
+		else if(bucketMin>dsum)
+			bucketMin=dsum;
 	}
 } 
 
 void renderObjects() {
-	memset((void *)numBucketedFaces,0,128); 
-	memset((void *)vertexCache,0,sizeof(vertexCache));
+	memset((void *)faceBucket,0xFF,sizeof(faceBucket)); 
 	numFaces = 0; 
-	
+	bucketMax = 0;
 	for(uint8_t i=0;i<numObjects;i++) { 
 		cacheObject(i);
 	} 
-	 
-	for(uint8_t i=127;i>0;i--) { 
-		for(uint8_t j=0;j<numBucketedFaces[i];j++) { 
-			bilerp32(&faceCache[faceBucket[i][j]]);
+	
+	uint16_t* bucket = &faceBucket[bucketMax]; 
+	
+	for(uint24_t j = 0; j < bucketMax-bucketMin; j++) {
+		uint16_t index = *bucket;
+		
+		while(index!=0xFFFF) { 
+			bilerp32(&faceCache[index]); 
+			index = faceCache[index].next;  
 		}
+		
+		bucket--;
 	} 
 } 

@@ -39,7 +39,96 @@ ys equ iy+2
 depth equ iy+4 
 outcode equ iy+5
 
-
+; loads matrix smc bytes ( except translation column )
+; IY = matrix pointer
+_loadMatrix: 
+	ld b,$93 	; sub a,e 
+	ld c,0 		; nop 
+	
+	ld hl,(m00)
+	ld (SMCloadM00),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM00),a 
+	
+	ld hl,(m01)
+	ld (SMCloadM01),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM01),a 
+	
+	ld hl,(m02)
+	ld (SMCloadM02),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM02),a 
+	
+	ld hl,(m10)
+	ld (SMCloadM10),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM10),a 
+	
+	ld hl,(m11)
+	ld (SMCloadM11),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM11),a 
+	
+	ld hl,(m12)
+	ld (SMCloadM12),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM12),a 
+	
+	ld hl,(m20)
+	ld (SMCloadM20),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM20),a 
+	
+	ld hl,(m21)
+	ld (SMCloadM21),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM21),a
+	
+	ld hl,(m22)
+	ld (SMCloadM22),hl
+	bit 7,h 
+	jr Z,$+5
+	ld a,b 
+	jr $+3 
+	ld a,c 
+	ld (SMCsignM22),a 
+	
+	ret
+	
+	
 _setCameraPosition: 
 	push ix 
 	ld ix,6 
@@ -89,9 +178,9 @@ _transformVertices:
 	ld (SMCLoadZ),hl
 	
 	ld iy,(ix+6) 
-	ld bc,(ix+9) 
+	ld hl,(ix+9) 
 	ld ix,(ix+3) 
-	
+	ld bc,0
 loop:
 	exx 
 	call _matrixRow0Multiply
@@ -104,23 +193,24 @@ loop:
 	lea ix,ix+6 
 	lea iy,iy+6 
 	exx 
-	dec bc 
+	dec hl
 	or a,a 
-	sbc hl,hl 
-	sbc hl,bc 
+	sbc hl,bc
 	jr nz,loop
 	pop ix
 	ret 
 	
-
+virtual at $E30880
+_matrixRoutine:	
 _projectVertices: 
 	pop hl 
-	pop bc ; vertex count
+	pop de ; vertex count
 	pop iy 
 	push iy
-	push bc 
+	push de 
 	push hl 
 	push ix
+	
 	lea ix,iy+0 ; ix = vertex pointer  
 	ld iy,_cameraMatrix ; iy = camera pointer
 	call _loadMatrix
@@ -131,6 +221,9 @@ _projectVertices:
 	ld hl,(cz) 
 	ld (SMCLoadZ),hl
 	ld iy,_vertexCache 
+	ex de,hl 
+	ld de,0
+	
 	
 projloop: 	
 	exx 
@@ -149,24 +242,11 @@ projloop:
 	ld (outcode),$FF ; out of range 
 	jq skipVert
 	
-	dec hl 
-	add hl,hl
-	ld de,_recipTable
+	dec l 
+	add hl,hl  
+	ld de,ZinvLUT
 	add hl,de 
-	ld de,(hl) 
-	ex.sis de,hl
-	; focal length = 128
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	push hl 
-	inc sp 
-	pop hl 
-	dec sp 
+	ld hl,(hl) 
 	push hl
 	push hl
 	
@@ -202,16 +282,17 @@ projloop:
 	
 	xor a,a 
 	cp a,h 
-	jr Z,$+11
+	jr Z,$+9
 	ld (outcode),$FF 
 	pop bc 
-	jq skipVert
+	jr skipVert
 	; left outcode 
 	ld h,a 
-	cp a,256-canvas_width
-	rl h 	; set if x less than 
+	ld a,l
+	cp a,48
+	rl h	; set if x less than 
 	; right outcode 
-	cp a,canvas_width 
+	cp a,canvas_width+48
 	ccf 
 	rl h 
 	ld a,h 
@@ -258,8 +339,8 @@ projloop:
 	ld de,canvas_height
 	or a,a 
 	sbc hl,de 
-	jp m,$+6
-	scf 
+	add.sis hl,hl
+	ccf 
 	rla 
 	
 	ld (outcode),a 
@@ -268,40 +349,16 @@ skipVert:
 	exx 
 	lea ix,ix+6 
 	lea iy,iy+6 
-	dec bc 
+	dec hl 
 	or a,a 
-	sbc hl,hl 
-	sbc hl,bc 
+	sbc hl,de 
 	jp nz,projloop 
 	
 	pop ix 
 	ret
 	
-	
-virtual at $E30880
-_matrixRoutine:	
-; loads matrix smc bytes ( except translation column )
-; HL = matrix pointer
-_loadMatrix: 
-	ld hl,(m00)
-	ld (SMCloadM00),hl
-	ld hl,(m01)
-	ld (SMCloadM01),hl
-	ld hl,(m02)
-	ld (SMCloadM02),hl
-	ld hl,(m10)
-	ld (SMCloadM10),hl
-	ld hl,(m11)
-	ld (SMCloadM11),hl
-	ld hl,(m12)
-	ld (SMCloadM12),hl
-	ld hl,(m20)
-	ld (SMCloadM20),hl
-	ld hl,(m21)
-	ld (SMCloadM21),hl
-	ld hl,(m22)
-	ld (SMCloadM22),hl
-	ret 	
+
+
 ;---------------------------------------------------------
 	; matrix row 0 multiply
 	; hl = result
@@ -318,9 +375,8 @@ SMCloadM00:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM00:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -345,9 +401,8 @@ SMCloadM01:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM01:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -373,9 +428,8 @@ SMCloadM02:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM02:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -411,9 +465,8 @@ SMCloadM10:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM10:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -438,9 +491,8 @@ SMCloadM11:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM11:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -466,9 +518,8 @@ SMCloadM12:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM12:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -503,9 +554,8 @@ SMCloadM20:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM20:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -530,9 +580,8 @@ SMCloadM21:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM21:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -558,9 +607,8 @@ SMCloadM22:=$-3
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c  
-	bit 7,b 
-	jr Z,$+3
 	sub a,e
+SMCsignM22:=$-1
 	ld h,e 
 	ld l,c 
 	mlt hl
@@ -585,3 +633,263 @@ _matrixroutine_len := $-$$
 end virtual
 _matrixroutine_src:
 	db _matrixroutine_data
+	
+	
+ZinvLUT:
+	dw 32767
+	dw 16384
+	dw 10922
+	dw 8192
+	dw 6553
+	dw 5461
+	dw 4681
+	dw 4096
+	dw 3640
+	dw 3276
+	dw 2978
+	dw 2730
+	dw 2520
+	dw 2340
+	dw 2184
+	dw 2048
+	dw 1927
+	dw 1820
+	dw 1724
+	dw 1638
+	dw 1560
+	dw 1489
+	dw 1424
+	dw 1365
+	dw 1310
+	dw 1260
+	dw 1213
+	dw 1170
+	dw 1129
+	dw 1092
+	dw 1057
+	dw 1024
+	dw 992
+	dw 963
+	dw 936
+	dw 910
+	dw 885
+	dw 862
+	dw 840
+	dw 819
+	dw 799
+	dw 780
+	dw 762
+	dw 744
+	dw 728
+	dw 712
+	dw 697
+	dw 682
+	dw 668
+	dw 655
+	dw 642
+	dw 630
+	dw 618
+	dw 606
+	dw 595
+	dw 585
+	dw 574
+	dw 564
+	dw 555
+	dw 546
+	dw 537
+	dw 528
+	dw 520
+	dw 512
+	dw 504
+	dw 496
+	dw 489
+	dw 481
+	dw 474
+	dw 468
+	dw 461
+	dw 455
+	dw 448
+	dw 442
+	dw 436
+	dw 431
+	dw 425
+	dw 420
+	dw 414
+	dw 409
+	dw 404
+	dw 399
+	dw 394
+	dw 390
+	dw 385
+	dw 381
+	dw 376
+	dw 372
+	dw 368
+	dw 364
+	dw 360
+	dw 356
+	dw 352
+	dw 348
+	dw 344
+	dw 341
+	dw 337
+	dw 334
+	dw 330
+	dw 327
+	dw 324
+	dw 321
+	dw 318
+	dw 315
+	dw 312
+	dw 309
+	dw 306
+	dw 303
+	dw 300
+	dw 297
+	dw 295
+	dw 292
+	dw 289
+	dw 287
+	dw 284
+	dw 282
+	dw 280
+	dw 277
+	dw 275
+	dw 273
+	dw 270
+	dw 268
+	dw 266
+	dw 264
+	dw 262
+	dw 260
+	dw 258
+	dw 256
+	dw 254
+	dw 252
+	dw 250
+	dw 248
+	dw 246
+	dw 244
+	dw 242
+	dw 240
+	dw 239
+	dw 237
+	dw 235
+	dw 234
+	dw 232
+	dw 230
+	dw 229
+	dw 227
+	dw 225
+	dw 224
+	dw 222
+	dw 221
+	dw 219
+	dw 218
+	dw 217
+	dw 215
+	dw 214
+	dw 212
+	dw 211
+	dw 210
+	dw 208
+	dw 207
+	dw 206
+	dw 204
+	dw 203
+	dw 202
+	dw 201
+	dw 199
+	dw 198
+	dw 197
+	dw 196
+	dw 195
+	dw 193
+	dw 192
+	dw 191
+	dw 190
+	dw 189
+	dw 188
+	dw 187
+	dw 186
+	dw 185
+	dw 184
+	dw 183
+	dw 182
+	dw 181
+	dw 180
+	dw 179
+	dw 178
+	dw 177
+	dw 176
+	dw 175
+	dw 174
+	dw 173
+	dw 172
+	dw 171
+	dw 170
+	dw 169
+	dw 168
+	dw 168
+	dw 167
+	dw 166
+	dw 165
+	dw 164
+	dw 163
+	dw 163
+	dw 162
+	dw 161
+	dw 160
+	dw 159
+	dw 159
+	dw 158
+	dw 157
+	dw 156
+	dw 156
+	dw 155
+	dw 154
+	dw 153
+	dw 153
+	dw 152
+	dw 151
+	dw 151
+	dw 150
+	dw 149
+	dw 148
+	dw 148
+	dw 147
+	dw 146
+	dw 146
+	dw 145
+	dw 144
+	dw 144
+	dw 143
+	dw 143
+	dw 142
+	dw 141
+	dw 141
+	dw 140
+	dw 140
+	dw 139
+	dw 138
+	dw 138
+	dw 137
+	dw 137
+	dw 136
+	dw 135
+	dw 135
+	dw 134
+	dw 134
+	dw 133
+	dw 133
+	dw 132
+	dw 132
+	dw 131
+	dw 131
+	dw 130
+	dw 130
+	dw 129
+	dw 129
+	dw 128
+ 
+	

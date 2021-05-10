@@ -30,7 +30,7 @@ y equ iy+20
 z equ iy+22
 
 
-_eulerToMatrix: 
+_eulerToMatrix:
 	ld hl,-18
 	call __frameset 
 	ld iy,(matrix) 

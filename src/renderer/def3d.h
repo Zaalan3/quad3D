@@ -42,13 +42,14 @@ typedef struct {
 	uint8_t outcode; // clipping outcode  
 } vertex_cached_t; 
 
-// 20 bytes
+// 22 bytes
 typedef struct {  
 	uint8_t shader; 
 	uint8_t light;
 	uint8_t u0,v0;	
 	int16_t x0,y0;
 	int16_t ay,ax,by,bx,cy,cx;
+	uint16_t next;
 } face_cached_t; 
 
 #endif 

@@ -28,10 +28,10 @@ extern vertex_cached_t vertexCache[512];
 extern uint24_t numFaces;
 extern face_cached_t faceCache[1024]; 
 
-// 128 depth buckets with 32 entries each
-// ~8 kb
-extern uint8_t numBucketedFaces[128];
-extern uint16_t faceBucket[128][32];
+// face bucket linked list
+// stores first face for each distance 
+extern uint16_t bucketMin,bucketMax;
+extern uint16_t faceBucket[1024];
 
 // initializes renderer
 void initRenderer(void); 

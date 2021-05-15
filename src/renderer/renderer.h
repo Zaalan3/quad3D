@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <tice.h>
@@ -30,7 +31,6 @@ extern face_cached_t faceCache[1024];
 
 // face bucket linked list
 // stores first face for each distance 
-extern uint16_t bucketMin,bucketMax;
 extern uint16_t faceBucket[1024];
 
 // initializes renderer

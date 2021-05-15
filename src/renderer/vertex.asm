@@ -128,7 +128,7 @@ _loadMatrix:
 	
 	ret
 	
-	
+;---------------------------------------------------------	
 _setCameraPosition: 
 	push ix 
 	ld ix,6 
@@ -163,6 +163,8 @@ _setCameraPosition:
 	pop ix
 	ret
 
+
+;---------------------------------------------------------
 _transformVertices: 
 	push ix 
 	ld ix,6 
@@ -180,7 +182,7 @@ _transformVertices:
 	ld iy,(ix+6) 
 	ld hl,(ix+9) 
 	ld ix,(ix+3) 
-	ld bc,0
+	ld bc,1
 loop:
 	exx 
 	call _matrixRow0Multiply
@@ -193,15 +195,15 @@ loop:
 	lea ix,ix+6 
 	lea iy,iy+6 
 	exx 
-	dec hl
 	or a,a 
 	sbc hl,bc
 	jr nz,loop
 	pop ix
 	ret 
-	
-virtual at $E30880
-_matrixRoutine:	
+
+;---------------------------------------------------------	
+virtual at $E308C0
+_matrixRoutine:
 _projectVertices: 
 	pop hl 
 	pop de ; vertex count
@@ -222,7 +224,7 @@ _projectVertices:
 	ld (SMCLoadZ),hl
 	ld iy,_vertexCache 
 	ex de,hl 
-	ld de,0
+	ld de,1
 	
 	
 projloop: 	
@@ -349,7 +351,6 @@ skipVert:
 	exx 
 	lea ix,ix+6 
 	lea iy,iy+6 
-	dec hl 
 	or a,a 
 	sbc hl,de 
 	jp nz,projloop 
@@ -360,10 +361,6 @@ skipVert:
 
 
 ;---------------------------------------------------------
-	; matrix row 0 multiply
-	; hl = result
-	; sp = matrix pointer
-	; ix = vector pointer
 _matrixRow0Multiply:
 	ld de,(x)
 	ld bc,0 
@@ -450,10 +447,6 @@ SMCLoadX:=$-3
 
 
 ;---------------------------------------------------------
-	; matrix row 1 multiply
-	; hl = result
-	; sp = matrix pointer
-	; ix = vector pointer
 _matrixRow1Multiply:
 	ld de,(x)
 	ld bc,0 
@@ -539,10 +532,6 @@ SMCLoadY:=$-3
 	ret 
 	
 ;---------------------------------------------------------
-	; matrix row 2 multiply
-	; hl = result
-	; sp = matrix pointer
-	; ix = vector pointer
 _matrixRow2Multiply:
 	ld de,(x)
 	ld bc,0 
@@ -627,7 +616,7 @@ SMCLoadZ:=$-3
 	add.sis hl,de
 	ret 
 	
-assert $<$E30BFF
+assert $<$E30B80
 load _matrixroutine_data: $-$$ from $$
 _matrixroutine_len := $-$$
 end virtual

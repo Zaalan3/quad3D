@@ -10,6 +10,10 @@ typedef struct {
 	int16_t z;
 } vertex_t; 
 
+#define UNCLIPPED_32 0 
+#define CLIPPED_32 1 
+#define UNCLIPPED_16 2 
+#define CLIPPED_16 3
 // 12 bytes 
 typedef struct {
 	uint8_t shader; 	// shader type 

@@ -6,6 +6,12 @@ public _matrixRoutine
 public _matrixroutine_len
 public _matrixroutine_src
 
+public _matrixRow0Multiply
+public _matrixRow1Multiply
+public _matrixRow2Multiply
+
+public _ZinvLUT
+
 extern canvas_width
 extern canvas_height
 
@@ -204,16 +210,13 @@ loop:
 ;---------------------------------------------------------	
 virtual at $E308C0
 _matrixRoutine:
+; ix = object pointer 
 _projectVertices: 
-	pop hl 
-	pop de ; vertex count
-	pop iy 
-	push iy
-	push de 
-	push hl 
-	push ix
+	push iy 
+	push bc
 	
-	lea ix,iy+0 ; ix = vertex pointer  
+	ld ix,(iy+13) ; ix = vertex pointer  
+	ld de,(iy+9)  ; de = vertex count
 	ld iy,_cameraMatrix ; iy = camera pointer
 	call _loadMatrix
 	ld hl,(cx) 
@@ -223,7 +226,7 @@ _projectVertices:
 	ld hl,(cz) 
 	ld (SMCLoadZ),hl
 	ld iy,_vertexCache 
-	ex de,hl 
+	ex.sis de,hl 
 	ld de,1
 	
 	
@@ -246,7 +249,7 @@ projloop:
 	
 	dec l 
 	add hl,hl  
-	ld de,ZinvLUT
+	ld de,_ZinvLUT
 	add hl,de 
 	ld hl,(hl) 
 	push hl
@@ -355,7 +358,8 @@ skipVert:
 	sbc hl,de 
 	jp nz,projloop 
 	
-	pop ix 
+	pop bc
+	pop iy
 	ret
 	
 
@@ -624,7 +628,7 @@ _matrixroutine_src:
 	db _matrixroutine_data
 	
 	
-ZinvLUT:
+_ZinvLUT:
 	dw 32767
 	dw 16384
 	dw 10922

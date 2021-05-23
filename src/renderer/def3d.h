@@ -10,18 +10,20 @@ typedef struct {
 	int16_t z;
 } vertex_t; 
 
-#define UNCLIPPED_32 0 
-#define CLIPPED_32 1 
-#define UNCLIPPED_16 2 
-#define CLIPPED_16 3
+enum shader_type { 
+	QUAD = 0, 
+	SPRITE
+}; 
+
 // 12 bytes 
 typedef struct {
 	uint8_t shader; 	// shader type 
-	uint16_t vt0,vt1,vt2,vt3; 	// vertices of face
-	uint8_t u0,v0; // UV coords 
 	uint8_t light; // light level + palette
+	uint8_t u0,v0; // UV coords 
+	uint16_t vt0,vt1,vt2,vt3; 	// vertices of face
 } face_t; 
 
+// 19 bytes
 typedef struct { 
 	int16_t x; 
 	int16_t y;
@@ -45,6 +47,13 @@ typedef struct {
 	uint8_t depth; // z 
 	uint8_t outcode; // clipping outcode  
 } vertex_cached_t; 
+
+enum face_type { 
+	UNCLIPPED_32=0,  
+	CLIPPED_32, 
+	UNCLIPPED_16, 
+	CLIPPED_16
+}; 
 
 // 22 bytes
 typedef struct {  

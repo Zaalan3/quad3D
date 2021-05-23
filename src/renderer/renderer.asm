@@ -11,7 +11,6 @@ extern port_setup
 extern port_privilege_unlock
 extern port_privilege_lock
 
-extern _numFaces 
 extern _numObjects
 
 extern _bilerpShader
@@ -55,18 +54,14 @@ _initRenderer:
 	ldir 
 	
 	; reset global variables
-	or a,a 
-	sbc hl,hl 
-	ld (_numFaces),hl 
-	ld a,h 
+	xor a,a
 	ld (_numObjects),a
 	
 	ret 
 	
-	
-_closeRenderer: 
+_closeRenderer:
 	push ix 
 	call port_privilege_lock 
 	pop ix 
-	jp _gfx_End  
+	jp _gfx_End
 	

@@ -18,6 +18,7 @@ by equ iy+12
 bx equ iy+14
 cy equ iy+16
 cx equ iy+18
+next equ iy+20
 
 macro shaderEntry? shader,length,size 
 	emit 3: shader 
@@ -37,12 +38,6 @@ _bilerpShader:
 
 ; iy = cached face pointer
 _callShader: 
-	pop hl 
-	pop iy 
-	push iy 
-	push hl 
-	push ix 
-	push iy 
 	; load shader to $E10010 
 	ld l,(shader) 
 	ld h,5 
@@ -142,8 +137,6 @@ SMCloadCount:=$-1
 	jp nz,shaderRoutine 
 	ld sp,0 
 SMCloadSP:=$-3 
-	pop iy 
-	pop ix
 	ret 
 	
 assert $ < $E308C0

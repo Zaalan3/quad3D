@@ -41,12 +41,14 @@ typedef struct {
 #define BOTTOM 0b00000001
 #define OOB 0xFF
 
-// 6 bytes 
+// 8 bytes 
 typedef struct { 
 	int16_t xs,ys; // screen position
 	uint8_t depth; // z 
 	uint8_t outcode; // clipping outcode  
+	uint8_t rs0,rs1; // reserved
 } vertex_cached_t; 
+
 
 enum face_type { 
 	UNCLIPPED_32=0,  

@@ -57,6 +57,7 @@ _callShader:
 	ld (SMCloadSP),sp
 	ld c,a		; c = v count 
 	srl a 
+	srl a 
 	ld b,a 		; b = u count
 	ld (SMCloadCount),a
 	
@@ -148,134 +149,84 @@ _bilerp_src:
 	
 ;-----------------------------------
 bilerp32: 
+repeat 4 
 	ld a,h 
 	exx 
 	ld d,a 
 	ld e,h 
 	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
 	ld (de),a 
 	inc c 
 	add hl,sp 
 	exx 
-	add hl,de 
-	ld a,h 
-	exx 
-	ld d,a 
-	ld e,h 
-	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
-	ld (de),a 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de 
+	add hl,de
+end repeat	
 	djnz bilerp32
 	jp bilerp_vloop 
 bilerp32_len:=$-bilerp32
+assert bilerp32_len <= 64 
 
 ;-----------------------------------
-bilerp32_clipped: 
+bilerp32_clipped:
+repeat 4
 	ld a,h 
 	exx 
 	ld d,a 
 	rlca 
-	jr c,$+9 
+	jr c,$+5 
 	ld e,h 
 	ld a,(bc)
-	add a,iyl
-	jr c,$+3
 	ld (de),a 
 	inc c 
 	add hl,sp 
 	exx 
 	add hl,de 
-	ld a,h 
-	exx 
-	ld d,a 
-	rlca 
-	jr c,$+9 
-	ld e,h 
-	ld a,(bc)
-	add a,iyl
-	jr c,$+3
-	ld (de),a 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de 
+end repeat 
 	djnz bilerp32_clipped
 	jp bilerp_vloop 
 bilerp32_clipped_len:=$-bilerp32_clipped
-
+assert bilerp32_clipped_len <= 64 
 ;-----------------------------------
 bilerp16: 
+repeat 4 
 	ld a,h 
 	exx 
 	ld d,a 
 	ld e,h 
 	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
 	ld (de),a 
 	inc c 
 	inc c 
 	add hl,sp 
 	exx 
 	add hl,de 
-	ld a,h 
-	exx 
-	ld d,a 
-	ld e,h 
-	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
-	ld (de),a 
-	inc c 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de 
+end repeat 
 	djnz bilerp16
-	jp bilerp_vloop 
+	exx 
+	inc b 
+	jp bilerp_vloop+1
 bilerp16_len:=$-bilerp16
-
+assert bilerp16_len <= 64 
 ;-----------------------------------
-bilerp16_clipped: 
+bilerp16_clipped:
+repeat 4
 	ld a,h 
 	exx 
 	ld d,a 
 	rlca 
-	jr c,$+9
+	jr c,$+5
 	ld e,h 
 	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
 	ld (de),a 
 	inc c 
 	inc c 
 	add hl,sp 
 	exx 
 	add hl,de 
-	ld a,h 
-	exx 
-	ld d,a 
-	rlca 
-	jr c,$+9
-	ld e,h 
-	ld a,(bc) 
-	add a,iyl
-	jr c,$+3 
-	ld (de),a 
-	inc c 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de 
+end repeat
 	djnz bilerp16_clipped
-	jp bilerp_vloop 
+	exx 
+	inc b 
+	jp bilerp_vloop+1
 bilerp16_clipped_len:=$-bilerp16_clipped
-
-
+assert bilerp16_clipped_len <= 64

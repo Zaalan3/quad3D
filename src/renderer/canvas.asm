@@ -2,6 +2,9 @@
 public _blitCanvas
 public _clearCanvas
 
+public _vertexCache 
+public _faceBucket
+
 public canvas
 public canvas_width
 public canvas_height
@@ -12,6 +15,9 @@ canvas_height:=120
 canvas_offset:=48
 
 screen:=$D52C00 
+
+_faceBucket:=$D52000
+_vertexCache:=$D50000
 
 _clearCanvas: 
 	ld iy,0 

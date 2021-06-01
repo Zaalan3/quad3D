@@ -16,6 +16,8 @@
 #include "gfx/gfx.h"
 
 extern object_t squareModel;
+extern object_t monkey;
+extern object_t zelda;
 
 #define startTimer() timer_1_Counter = 0; \
 					timer_Control = TIMER1_ENABLE|TIMER1_CPU|TIMER1_UP;
@@ -24,26 +26,18 @@ extern object_t squareModel;
 
 int main(void)
 {
-	uint8_t ay = 90;
+	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	vertex_t pos = {64,0,64};
-	vertex_t* rotatedVerts; 
-	translation_matrix_t tempMatrix; 
+	vertex_t pos = {16,0,48};
 	
     initRenderer();
-	gfx_SetPalette(global_palette,sizeof_global_palette,0); 
-	loadTextureMapCompressed(tileset_compressed);	
+	gfx_SetPalette(global_palette,sizeof_global_palette,0);
+	loadTextureMapCompressed(tileset_compressed);
+	//memset((void *)0xD48000,0xFF,32*1024);
+		
 
-	rotatedVerts = (vertex_t *)malloc(sizeof(vertex_t)*squareModel.vertnum); 
-	eulerToMatrix(&tempMatrix,30,50,100); 
-	tempMatrix.x = 0;
-	tempMatrix.y = 0;
-	tempMatrix.z = 0;
-	transformVertices(&tempMatrix,squareModel.vertex,rotatedVerts,squareModel.vertnum); 
-	squareModel.vertex = rotatedVerts; 
-	
-	activeObject[0] = &squareModel;
+	activeObject[0] = &zelda;
 	numObjects = 1;
 	
 	gfx_SetColor(0xFF); 
@@ -64,15 +58,15 @@ int main(void)
 	while(!kb_IsDown(kb_KeyClear)) { 
 			
 		if(kb_IsDown(kb_KeyLeft)) { 
-			pos.x--; 
+			pos.x-=4; 
 		} else if(kb_IsDown(kb_KeyRight)) { 
-			pos.x++; 
+			pos.x+=4; 
 		} 
 		
 		if(kb_IsDown(kb_KeyUp)) { 
-			pos.z--; 
+			pos.y+=4; 
 		} else if(kb_IsDown(kb_KeyDown)) { 
-			pos.z++; 
+			pos.y-=4; 
 		} 
 		
 		setCameraPosition(&pos);
@@ -88,8 +82,6 @@ int main(void)
 
 		kb_Scan(); 
 	} 
-	
-	free(rotatedVerts);
-	
+		
 	closeRenderer();
 }

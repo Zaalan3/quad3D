@@ -299,8 +299,8 @@ projloop:
 	; right outcode 
 	cp a,canvas_width+48
 	ccf 
-	rl h 
-	ld a,h 
+	ld a,h  
+	rla
 	ex af,af' 
 	
 	; height/2 - y'*f/z'
@@ -353,10 +353,10 @@ projloop:
 skipVert: 
 	exx 
 	lea ix,ix+6 
-	lea iy,iy+6 
+	lea iy,iy+8 
 	or a,a 
 	sbc hl,de 
-	jp nz,projloop 
+	jq nz,projloop 
 	
 	pop bc
 	pop iy
@@ -620,7 +620,7 @@ SMCLoadZ:=$-3
 	add.sis hl,de
 	ret 
 	
-assert $<$E30B80
+assert $<$E30B0F
 load _matrixroutine_data: $-$$ from $$
 _matrixroutine_len := $-$$
 end virtual

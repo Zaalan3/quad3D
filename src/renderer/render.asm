@@ -91,10 +91,8 @@ faceloop:
 	; fetch vertices 
 	ld hl,(vt0) 
 	add hl,hl
-	ld d,h 
-	ld e,l 
-	add hl,hl
-	add.sis hl,de 
+	add hl,hl 
+	add.sis hl,hl
 	ld de,_vertexCache
 	add hl,de 
 	lea de,x0 
@@ -103,10 +101,8 @@ faceloop:
 	
 	ld hl,(vt1) 
 	add hl,hl
-	ld b,h 
-	ld c,l 
-	add hl,hl
-	add.sis hl,bc 
+	add hl,hl 
+	add.sis hl,hl
 	ld bc,_vertexCache
 	add hl,bc 
 	ld bc,6 
@@ -114,10 +110,8 @@ faceloop:
 	
 	ld hl,(vt2) 
 	add hl,hl
-	ld b,h 
-	ld c,l 
-	add hl,hl
-	add.sis hl,bc 
+	add hl,hl 
+	add.sis hl,hl 
 	ld bc,_vertexCache
 	add hl,bc 
 	ld bc,6 
@@ -125,10 +119,8 @@ faceloop:
 	
 	ld hl,(vt3) 
 	add hl,hl
-	ld b,h 
-	ld c,l 
-	add hl,hl
-	add.sis hl,bc 
+	add hl,hl 
+	add.sis hl,hl 
 	ld bc,_vertexCache
 	add hl,bc 
 	ld bc,6 
@@ -167,23 +159,22 @@ faceloop:
 	sbc.sis hl,de 
 	ld (tby),hl 
 	
+	; cy = y1 - y0 
+	ld hl,(y1) 
+	or a,a 
+	sbc.sis hl,de 
+	ld (tcy),hl 
+	
 	;bx = x3 - x0 
 	ld hl,(x3) 
 	ld de,(x0) 
 	or a,a 
 	sbc.sis hl,de 
-	ld (tbx),hl
-	
-	; cy = y1 - y0 
-	ld hl,(y1) 
-	ld de,(y0) 
-	or a,a 
-	sbc.sis hl,de 
-	ld (tcy),hl 
+	ld (tbx),l
+	ld (tbx+1),h
 	
 	;cx = x1 - x0 
 	ld hl,(x1) 
-	ld de,(x0) 
 	or a,a 
 	sbc.sis hl,de 
 	ld (tcx),hl
@@ -314,48 +305,48 @@ faceloop:
 	rl h 
 	jq nc,shader16 
 _shader32: 
-	ld hl,(tax) 
-	sra h 
-	rr l 
-	sra h 
-	rr l 
-	ld (tax),l 
-	ld (tax+1),h 
 	ld hl,(tay) 
+	ld de,(tax) 
 	sra h 
 	rr l 
 	sra h 
 	rr l 
-	ld (tay),l 
-	ld (tay+1),h 
+	ld (tay),hl
+	ex de,hl  
+	sra h 
+	rr l 
+	sra h 
+	rr l 
+	ld de,(tby)
+	ld (tax),hl
 	
-	ld hl,(tbx) 
+	ex de,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	ld (tbx),l 
-	ld (tbx+1),h 
+	ld de,(tbx) 
+	ld (tby),hl 
 	
-	ld hl,(tby) 
+	ex de,hl 
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	ld (tby),l 
-	ld (tby+1),h 
+	ld de,(tcy) 
+	ld (tbx),hl  
 	
-	ld hl,(tcx) 
+	ex de,hl 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	ld de,(tcx)
+	ld (tcy),hl  
+	
+	ex de,hl 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	ld (tcx),l 
-	ld (tcx+1),h 
-	
-	ld hl,(tcy) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tcy),l 
-	ld (tcy+1),h
+	ld (tcx+1),h
 	
 	jq copyFace 
 shader16: 
@@ -363,37 +354,37 @@ shader16:
 	add a,(tshader) 
 	ld (tshader),a 
 	
-	ld hl,(tbx) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tbx),l 
-	ld (tbx+1),h 
-	
 	ld hl,(tby) 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	ld (tby),l 
-	ld (tby+1),h 
+	ld de,(tbx) 
+	ld (tby),hl 
 	
-	ld hl,(tcx) 
+	ex de,hl 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	ld de,(tcy) 
+	ld (tbx),hl  
+	
+	ex de,hl 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	ld de,(tcx)
+	ld (tcy),hl  
+	
+	ex de,hl 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	ld (tcx),l 
-	ld (tcx+1),h 
-	
-	ld hl,(tcy) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tcy),l 
-	ld (tcy+1),h
+	ld (tcx+1),h
 	
 copyFace: 
 	; copy face to cache 

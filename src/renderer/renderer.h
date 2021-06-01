@@ -23,14 +23,16 @@ extern uint8_t numObjects;
 extern object_t* activeObject[64];
 
 // processed vertices
-extern vertex_cached_t vertexCache[512]; 
+// 8 kb
+extern vertex_cached_t vertexCache[1024]; 
 
 // visible faces cache
-extern uint24_t numFaces;
+// 22 kb on heap
 extern face_cached_t faceCache[1024]; 
 
 // face bucket linked list
-// stores first face for each distance 
+// stores first face for each distance
+// 2 kb 
 extern uint16_t faceBucket[1024];
 
 // initializes renderer

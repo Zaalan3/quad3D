@@ -22,6 +22,9 @@ extern translation_matrix_t cameraMatrix;
 extern uint8_t numObjects;
 extern object_t* activeObject[64];
 
+extern uint8_t numSprites; 
+extern billboard_t activeSprite[64];
+
 // processed vertices
 // 8 kb
 extern vertex_cached_t vertexCache[1024]; 
@@ -47,7 +50,7 @@ void blitCanvas(void);
 // clears the canvas
 void clearCanvas(void); 
 
-// renders objects to canvas
+// renders objects and sprites to canvas.
 void renderObjects(void);
 
 #define setCameraAngle(ax,ay,az) eulerToMatrix(&cameraMatrix,ax,ay,az) 

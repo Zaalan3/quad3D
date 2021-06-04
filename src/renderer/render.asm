@@ -1,12 +1,25 @@
 public _renderObjects
 
+extern _activeSprite
+extern _numSprites
 extern _activeObject
 extern _numObjects
 extern _projectVertices
+extern _projectSprites
 extern _vertexCache
 extern _faceBucket
 extern _faceCache
 extern _callShader
+extern _clearCanvas
+
+extern _ZinvLUT
+
+spriteX equ iy+0 
+spriteY equ iy+2 
+spriteDepth equ iy+4 
+spriteOutcode equ iy+5 
+spriteU equ iy+6 
+spriteV equ iy+7 
 
 shader equ iy+0
 light equ iy+1	
@@ -70,6 +83,127 @@ _renderObjects:
 	ld bc,_faceCache 
 	ld (facePointer),bc
 	
+; process sprites 
+processSprites:
+	ld a,(_numSprites) 
+	or a,a 
+	jq Z,processObjects 
+	ld b,a 
+	ld iy,_vertexCache	
+	call _projectSprites
+	ld ix,$E10010
+spriteloop: 
+	exx 
+	ld a,(spriteOutcode) 
+	cp a,$FF 	; skip if out of bounds 
+	jq Z,skipSprite 
+	tst a,0101b 	; skip if vertex is to the right of or below the screen
+	jq nz,skipSprite 
+	and a,0010b 
+	ld b,0 
+	jr Z,$+3  
+	inc b 
+; compute width and height
+	or a,a 
+	sbc hl,hl 
+	ld l,(spriteDepth) 
+	add hl,hl 
+	ld de,_ZinvLUT
+	add hl,de 
+	ld e,(hl)
+	inc hl 
+	ld d,(hl) 
+	ex.sis de,hl
+	; size = 8*f/z
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	push hl 
+	inc sp 
+	pop hl 
+	dec sp 
+	ex de,hl 
+	ld hl,(spriteY) 
+	add.sis hl,de 
+	xor a,a
+	cp a,h 
+	ld a,b 
+	jr z,$+4 
+	or a,1
+	ld hl,-17 ;if size > 16  
+	add hl,de 
+	jr c,$+4 
+	add a,2 
+	add a,4 
+	ld (tshader),a 
+; set face entry 
+	ex de,hl 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	bit 1,a ; if 32 pixel shader 
+	jr nz,$+3 
+	add hl,hl 
+	ld (tbx),hl 
+	ld (tcy),hl 
+	
+	ld hl,(spriteU) 
+	ld (tu0),hl 
+	ld hl,(spriteX) 
+	ld (tx0),hl 
+	ld a,(spriteY+1) 
+	ld (ty0+1),a
+	xor a,a 
+	sbc hl,hl 
+	ld (tay),hl 
+	ld (tax+1),hl 
+	ld (tby+1),a 
+	ld (tcx),hl
+	
+	; find depth bucket 
+	ld l,(spriteDepth) 
+	add hl,hl 
+	add hl,hl
+	; update min and max buckets 
+	ex de,hl 
+	ld hl,(bucketMax) 
+	or a,a 
+	sbc hl,de 
+	jr nc,$+5 
+	ld (bucketMax),de 
+	
+	ld hl,(bucketMin) 
+	or a,a 
+	sbc hl,de 
+	jr c,$+5 
+	ld (bucketMin),de 
+	; update this face's bucket
+	ld hl,_faceBucket
+	add hl,de
+	add hl,de
+	ld de,(hl) 
+	ld (tnext),de 
+	ld de,(numFaces) 
+	ld (hl),e 
+	inc hl 
+	ld (hl),d 
+	inc de 	
+	ld (numFaces),de
+	
+	; copy face 
+	ld de,(facePointer)
+	lea hl,tshader 
+	ld bc,22 
+	ldir 
+	ld (facePointer),de 
+skipSprite:
+	exx
+	dec b 
+	jq nz,spriteloop
+	
+;----------------------------------------
+; process 3D objects 
+processObjects:
 	ld a,(_numObjects)
 	or a,a 
 	jq Z,return
@@ -86,6 +220,7 @@ cacheFaces:
 	ld ix,$E10010
 	ld hl,1 
 	ex.sis hl,de
+	ld (StoreSP),sp
 faceloop:
 	exx 
 	; fetch vertices 
@@ -93,8 +228,8 @@ faceloop:
 	add hl,hl
 	add hl,hl 
 	add.sis hl,hl
-	ld de,_vertexCache
-	add hl,de 
+	ld sp,_vertexCache
+	add hl,sp 
 	lea de,x0 
 	ld bc,6 
 	ldir 
@@ -103,27 +238,24 @@ faceloop:
 	add hl,hl
 	add hl,hl 
 	add.sis hl,hl
-	ld bc,_vertexCache
-	add hl,bc 
-	ld bc,6 
+	add hl,sp 
+	ld c,6 
 	ldir
 	
 	ld hl,(vt2) 
 	add hl,hl
 	add hl,hl 
 	add.sis hl,hl 
-	ld bc,_vertexCache
-	add hl,bc 
-	ld bc,6 
+	add hl,sp 
+	ld c,6 
 	ldir
 	
 	ld hl,(vt3) 
 	add hl,hl
 	add hl,hl 
 	add.sis hl,hl 
-	ld bc,_vertexCache
-	add hl,bc 
-	ld bc,6 
+	add hl,sp
+	ld c,6 
 	ldir
 	
 	; load outcodes 
@@ -145,7 +277,7 @@ faceloop:
 	cp a,$FF 
 	jq z,skipFace 
 	; shader is clipped if BOTTOM|TOP
-	ld b,0 
+	ld b,(shader) 
 	and a,3 
 	jr Z,$+3
 	inc b 
@@ -183,53 +315,53 @@ faceloop:
 	ld hl,(x2) 
 	or a,a 
 	sbc.sis hl,de 
-	ld b,h 
-	ld c,l 
+	ex de,hl
 	ld hl,(tcy) 
-	ld de,(tby) 
+	ld bc,(tby) 
 	or a,a 
-	sbc.sis hl,de
-	; de = hl*bc 
-	ld d,l 
-	ld e,c 
-	ld l,c 
-	ld c,d  
+	sbc.sis hl,bc
+	;hl*de 
+	ld b,l 
+	ld c,e 
+	ld l,e 
+	ld e,b  
 	mlt hl 
 	mlt bc 
 	mlt de 
-	ld a,d 
+	ld a,b 
 	add a,l 
-	add a,c 
-	ld d,a 
-	push de 
+	add a,e 
+	ld h,a 
+	ld l,c 
+	ld sp,hl  
 	
-	ld hl,(y2)
-	ld de,(y0) 
+	ld hl,(y2) 
+	ld de,(y0)
 	or a,a 
 	sbc.sis hl,de 
-	ld b,h 
-	ld c,l 
+	ex de,hl
 	ld hl,(tbx) 
-	ld de,(tcx) 
+	ld bc,(tcx) 
 	or a,a 
-	sbc.sis hl,de
-	ld d,l 
-	ld e,c 
-	ld l,c 
-	ld c,d  
+	sbc.sis hl,bc
+	;hl*de 
+	ld b,l 
+	ld c,e 
+	ld l,e 
+	ld e,b  
 	mlt hl 
 	mlt bc 
 	mlt de 
-	ld a,d 
+	ld a,b 
 	add a,l 
-	add a,c 
-	ld d,a
-	pop hl 
-	add hl,de
+	add a,e 
+	ld h,a 
+	ld l,c 
+	add hl,sp 
 	; skip if area >= 0 
 	bit 7,h 
 	jq z,skipFace 
-	push hl
+	ld sp,hl
 	
 	; ay = y0 - y1 - y3 + y2 = y2 - by - y1 
 	ld hl,(y2) 
@@ -263,7 +395,9 @@ faceloop:
 	; find sum of distances (8.2 average)  
 	or a,a 
 	sbc hl,hl 
-	ld de,0 
+	ex de,hl 
+	or a,a 
+	sbc hl,hl
 	ld l,(depth0) 
 	ld e,(depth1) 
 	add hl,de 
@@ -299,12 +433,15 @@ faceloop:
 	ld (numFaces),de
 	
 	; if area >= -512 then use 16x16 shader
-	pop bc
 	ld hl,512 
-	add.sis hl,bc 
+	add hl,sp
 	rl h 
 	jq nc,shader16 
 _shader32: 
+	ld a,2 
+	add a,(tshader) 
+	ld (tshader),a
+	
 	ld hl,(tay) 
 	ld de,(tax) 
 	sra h 
@@ -350,10 +487,6 @@ _shader32:
 	
 	jq copyFace 
 shader16: 
-	ld a,2 
-	add a,(tshader) 
-	ld (tshader),a 
-	
 	ld hl,(tby) 
 	add hl,hl
 	add hl,hl
@@ -400,6 +533,8 @@ skipFace:
 	or a,a 
 	sbc hl,de 
 	jq nz,faceloop 
+	ld sp,0
+StoreSP:=$-3 
 	pop iy 
 	dec b 
 	jq nz,objectloop

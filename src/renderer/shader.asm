@@ -27,10 +27,14 @@ macro shaderEntry? shader,length,size
 end macro 
 
 shaderTable: 
-	shaderEntry bilerp32,bilerp32_len,32 
-	shaderEntry bilerp32_clipped,bilerp32_clipped_len,32 
 	shaderEntry bilerp16,bilerp16_len,16 
 	shaderEntry bilerp16_clipped,bilerp16_clipped_len,16
+	shaderEntry bilerp32,bilerp32_len,32 
+	shaderEntry bilerp32_clipped,bilerp32_clipped_len,32
+	shaderEntry bilerp16_transparent,bilerp16_transparent_len,16 
+	shaderEntry bilerp16_transparent_clipped,bilerp16_transparent_clipped_len,16
+	shaderEntry bilerp32_transparent,bilerp32_transparent_len,32 
+	shaderEntry bilerp32_transparent_clipped,bilerp32_transparent_clipped_len,32 
 	
 ;-----------------------------------
 virtual at $E30800
@@ -60,6 +64,10 @@ _callShader:
 	srl a 
 	ld b,a 		; b = u count
 	ld (SMCloadCount),a
+	srl a 
+	srl a 
+	ld (SMCloadLineCount),a 
+	ex af,af'
 	
 	ld hl,(ax) 
 	ld (SMCloadAX),hl
@@ -117,7 +125,13 @@ SMCloadCXH:=$-1
 SMCloadCXL:=$-1
 	add ix,de 
 	lea hl,ix+0 
+	ex af,af' 
+	dec a 
+	jr nz,$+5
+	ld a,0 
+SMCloadLineCount:=$-1 
 	inc b 
+	ex af,af' 
 	ld c,iyh
 	exx 
 	ld hl,0 
@@ -140,52 +154,13 @@ SMCloadCount:=$-1
 SMCloadSP:=$-3 
 	ret 
 	
-assert $ < $E308C0
+assert $ < $E308D0
 load _bilerp_data: $-$$ from $$
 _bilerp_len := $-$$
 end virtual
 _bilerp_src:
 	db _bilerp_data
 	
-;-----------------------------------
-bilerp32: 
-repeat 4 
-	ld a,h 
-	exx 
-	ld d,a 
-	ld e,h 
-	ld a,(bc) 
-	ld (de),a 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de
-end repeat	
-	djnz bilerp32
-	jp bilerp_vloop 
-bilerp32_len:=$-bilerp32
-assert bilerp32_len <= 64 
-
-;-----------------------------------
-bilerp32_clipped:
-repeat 4
-	ld a,h 
-	exx 
-	ld d,a 
-	rlca 
-	jr c,$+5 
-	ld e,h 
-	ld a,(bc)
-	ld (de),a 
-	inc c 
-	add hl,sp 
-	exx 
-	add hl,de 
-end repeat 
-	djnz bilerp32_clipped
-	jp bilerp_vloop 
-bilerp32_clipped_len:=$-bilerp32_clipped
-assert bilerp32_clipped_len <= 64 
 ;-----------------------------------
 bilerp16: 
 repeat 4 
@@ -196,17 +171,15 @@ repeat 4
 	ld a,(bc) 
 	ld (de),a 
 	inc c 
-	inc c 
 	add hl,sp 
 	exx 
 	add hl,de 
 end repeat 
 	djnz bilerp16
-	exx 
-	inc b 
-	jp bilerp_vloop+1
+	jp bilerp_vloop
 bilerp16_len:=$-bilerp16
 assert bilerp16_len <= 64 
+
 ;-----------------------------------
 bilerp16_clipped:
 repeat 4
@@ -219,14 +192,186 @@ repeat 4
 	ld a,(bc) 
 	ld (de),a 
 	inc c 
-	inc c 
 	add hl,sp 
 	exx 
 	add hl,de 
 end repeat
 	djnz bilerp16_clipped
-	exx 
-	inc b 
-	jp bilerp_vloop+1
+	jp bilerp_vloop
 bilerp16_clipped_len:=$-bilerp16_clipped
 assert bilerp16_clipped_len <= 64
+
+;-----------------------------------
+bilerp16_transparent: 
+repeat 4
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,(bc) 
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	inc c 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat
+	djnz bilerp16_transparent
+	jp bilerp_vloop
+bilerp16_transparent_len:=$-bilerp16_transparent
+assert bilerp16_transparent_len <= 64 	
+;-----------------------------------
+bilerp16_transparent_clipped: 
+	sla b
+.loop:
+repeat 2
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+8
+	ld e,h 
+	ld a,(bc) 
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	inc c 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat
+	djnz bilerp16_transparent_clipped.loop
+	jp bilerp_vloop
+bilerp16_transparent_clipped_len:=$-bilerp16_transparent_clipped
+assert bilerp16_transparent_clipped_len <= 64 
+
+;-----------------------------------
+bilerp32: 
+repeat 2 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,(bc) 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,(bc) 
+	inc c 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+end repeat	
+	djnz bilerp32
+	jp bilerp_vloop 
+bilerp32_len:=$-bilerp32
+assert bilerp32_len <= 64 
+
+;-----------------------------------
+bilerp32_clipped:
+repeat 2
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+5 
+	ld e,h 
+	ld a,(bc)
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+5 
+	ld e,h 
+	ld a,(bc)
+	ld (de),a 
+	inc c 
+	add hl,sp 
+	exx 
+	add hl,de
+end repeat 
+	djnz bilerp32_clipped
+	jp bilerp_vloop 
+bilerp32_clipped_len:=$-bilerp32_clipped
+assert bilerp32_clipped_len <= 64 
+
+;-----------------------------------
+bilerp32_transparent: 
+repeat 2
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,(bc)
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,(bc) 
+	inc c 
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+end repeat
+	djnz bilerp32_transparent
+	jp bilerp_vloop 
+bilerp32_transparent_len:=$-bilerp32_transparent
+assert bilerp32_transparent_len <= 64 
+
+
+;-----------------------------------
+bilerp32_transparent_clipped:
+	sla b
+.loop:
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+8 
+	ld e,h 
+	ld a,(bc)
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+8
+	ld e,h 
+	ld a,(bc) 
+	or a,a 
+	jr Z,$+3
+	ld (de),a 
+	inc c 
+	add hl,sp 
+	exx 
+	add hl,de
+	djnz bilerp32_transparent_clipped.loop
+	jp bilerp_vloop 
+	
+bilerp32_transparent_clipped_len:=$-bilerp32_transparent_clipped
+assert bilerp32_transparent_clipped_len <= 64 

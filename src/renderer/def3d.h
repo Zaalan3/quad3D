@@ -35,6 +35,12 @@ typedef struct {
 	face_t* face;
 } object_t; 
 
+// 8 bytes 
+typedef struct { 
+	int16_t x,y,z; 
+	uint8_t u,v; 
+} billboard_t; 
+
 #define LEFT 0b00001000
 #define RIGHT 0b00000100
 #define TOP 0b00000010
@@ -50,11 +56,15 @@ typedef struct {
 } vertex_cached_t; 
 
 
-enum face_type { 
-	UNCLIPPED_32=0,  
-	CLIPPED_32, 
-	UNCLIPPED_16, 
-	CLIPPED_16
+enum face_type {
+	UNCLIPPED_16=0, 
+	CLIPPED_16,
+	UNCLIPPED_32,  
+	CLIPPED_32,
+	UNCLIPPED_TRANSPARENT_16, 
+	CLIPPED_TRANSPARENT_16,
+	UNCLIPPED_TRANSPARENT_32,  
+	CLIPPED_TRANSPARENT_32,
 }; 
 
 // 22 bytes

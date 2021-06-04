@@ -1,5 +1,6 @@
 public _transformVertices
 public _projectVertices
+public _projectSprites
 public _setCameraPosition
 
 public _matrixRoutine
@@ -22,6 +23,8 @@ extern _getReciprocal
 extern _MultiplyHLBC
 extern _recipTable
 
+extern _activeSprite
+extern _numSprites
 
 m00 equ iy+0 
 m01 equ iy+2
@@ -169,7 +172,7 @@ _setCameraPosition:
 	pop ix
 	ret
 
-
+	
 ;---------------------------------------------------------
 _transformVertices: 
 	push ix 
@@ -207,14 +210,46 @@ loop:
 	pop ix
 	ret 
 
+; projects sprite vertices
+_projectSprites: 
+	push iy 
+	push bc 
+	ld a,8
+	ld (SMCSizeVertex),a
+	
+	ld ix,_activeSprite 
+	ld iy,_cameraMatrix
+	call _loadMatrix 
+; half size of a sprite, displacement of topleft corner from sprite center(in local space)
+	ld de,8 
+	ld hl,(cx)
+	or a,a 
+	sbc.sis hl,de 
+	ld (SMCLoadX),hl
+	ld hl,(cy) 
+	add hl,de 
+	ld (SMCLoadY),hl
+	ld hl,(cz) 
+	ld (SMCLoadZ),hl
+	
+	ld iy,_vertexCache
+	or a,a 
+	sbc hl,hl 
+	ld a,(_numSprites)
+	ld l,a
+	ld de,1
+	jp projloop
+	
 ;---------------------------------------------------------	
-virtual at $E308C0
+virtual at $E308D0
 _matrixRoutine:
 ; ix = object pointer 
 _projectVertices: 
 	push iy 
 	push bc
 	
+	ld a,6 
+	ld (SMCSizeVertex),a
 	ld ix,(iy+13) ; ix = vertex pointer  
 	ld de,(iy+9)  ; de = vertex count
 	ld iy,_cameraMatrix ; iy = camera pointer
@@ -228,7 +263,6 @@ _projectVertices:
 	ld iy,_vertexCache 
 	ex.sis de,hl 
 	ld de,1
-	
 	
 projloop: 	
 	exx 
@@ -349,10 +383,14 @@ projloop:
 	rla 
 	
 	ld (outcode),a 
+	; copy UV for sprites
+	ld hl,(ix+6) 
+	ld (iy+6),hl
 	
 skipVert: 
 	exx 
 	lea ix,ix+6 
+SMCSizeVertex:=$-1
 	lea iy,iy+8 
 	or a,a 
 	sbc hl,de 
@@ -620,7 +658,6 @@ SMCLoadZ:=$-3
 	add.sis hl,de
 	ret 
 	
-assert $<$E30B0F
 load _matrixroutine_data: $-$$ from $$
 _matrixroutine_len := $-$$
 end virtual

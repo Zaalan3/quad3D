@@ -8,8 +8,8 @@ extern "C" {
 #define tileset_width 256
 #define tileset_height 128
 #define tileset_size 32768
-#define tileset_compressed_size 510
-extern unsigned char tileset_compressed[510];
+#define tileset_compressed_size 242
+extern unsigned char tileset_compressed[242];
 
 #ifdef __cplusplus
 }

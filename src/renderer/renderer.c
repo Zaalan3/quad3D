@@ -10,6 +10,9 @@
 uint8_t numObjects;
 object_t* activeObject[64];
 
+uint8_t numSprites; 
+billboard_t activeSprite[64];
+
 // visible faces cache
 face_cached_t faceCache[1024]; 
 

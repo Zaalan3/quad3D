@@ -30,7 +30,7 @@ int main(void)
 	uint8_t ax = 0; 
 	uint8_t az = 0;
 	vertex_t pos = {16,0,48};
-	
+	billboard_t spr = {0,20,0,0,0};
     initRenderer();
 	gfx_SetPalette(global_palette,sizeof_global_palette,0);
 	loadTextureMapCompressed(tileset_compressed);
@@ -40,6 +40,10 @@ int main(void)
 	activeObject[0] = &zelda;
 	numObjects = 1;
 	
+	/*
+	activeSprite[0] = spr;
+	numSprites = 1;
+	*/
 	gfx_SetColor(0xFF); 
 	
 	gfx_HorizLine(80,59,160);
@@ -58,16 +62,22 @@ int main(void)
 	while(!kb_IsDown(kb_KeyClear)) { 
 			
 		if(kb_IsDown(kb_KeyLeft)) { 
-			pos.x-=4; 
+			pos.x--; 
 		} else if(kb_IsDown(kb_KeyRight)) { 
-			pos.x+=4; 
+			pos.x++; 
 		} 
 		
 		if(kb_IsDown(kb_KeyUp)) { 
-			pos.y+=4; 
+			pos.y++; 
 		} else if(kb_IsDown(kb_KeyDown)) { 
-			pos.y-=4; 
+			pos.y--; 
 		} 
+		
+		if(kb_IsDown(kb_Key8)) { 
+			pos.z--; 
+		} else if(kb_IsDown(kb_Key2)) { 
+			pos.z++; 
+		}
 		
 		setCameraPosition(&pos);
 		clearCanvas();

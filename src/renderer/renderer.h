@@ -50,13 +50,10 @@ void blitCanvas(void);
 // clears the canvas
 void clearCanvas(void); 
 
-// renders objects and sprites to canvas.
+// renders objects and sprites to canvas. Clears canvas.
 void renderObjects(void);
 
 #define setCameraAngle(ax,ay,az) eulerToMatrix(&cameraMatrix,ax,ay,az) 
-
-// sets the camera's position 
-void setCameraPosition(vertex_t* position); 
 
 
 #endif

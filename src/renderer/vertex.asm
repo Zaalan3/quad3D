@@ -140,33 +140,36 @@ _loadMatrix:
 ;---------------------------------------------------------	
 _setCameraPosition: 
 	push ix 
-	ld ix,6 
-	add ix,sp 
-	ld ix,(ix+0)
 	ld iy,_cameraMatrix
 	call _loadMatrix
+	lea ix,cx	; offset of camera position
 	or a,a 
 	sbc hl,hl 
 	ld (SMCLoadX),hl 
 	ld (SMCLoadY),hl 
 	ld (SMCLoadZ),hl 
+	; translate object position
 	call _matrixRow0Multiply
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
-	ld (cx),hl 
+	push hl 
 	call _matrixRow1Multiply
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de
-	ld (cy),hl
+	push hl 
 	call _matrixRow2Multiply
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de
+	pop de 
+	pop bc 
+	ld (cx),bc 
+	ld (cy),de
 	ld (cz),l 
 	ld (cz+1),h
 	pop ix
@@ -219,7 +222,6 @@ _projectSprites:
 	
 	ld ix,_activeSprite 
 	ld iy,_cameraMatrix
-	call _loadMatrix 
 ; half size of a sprite, displacement of topleft corner from sprite center(in local space)
 	ld de,8 
 	ld hl,(cx)
@@ -240,30 +242,44 @@ _projectSprites:
 	ld de,1
 	jp projloop
 	
-;---------------------------------------------------------	
-virtual at $E308D0
-_matrixRoutine:
-; ix = object pointer 
 _projectVertices: 
 	push iy 
 	push bc
 	
 	ld a,6 
 	ld (SMCSizeVertex),a
-	ld ix,(iy+13) ; ix = vertex pointer  
-	ld de,(iy+9)  ; de = vertex count
-	ld iy,_cameraMatrix ; iy = camera pointer
-	call _loadMatrix
-	ld hl,(cx) 
-	ld (SMCLoadX),hl 
-	ld hl,(cy) 
+	lea ix,iy+0
+	ld iy,_cameraMatrix
+	or a,a 
+	sbc hl,hl
+	ld (SMCLoadX),hl
 	ld (SMCLoadY),hl
-	ld hl,(cz) 
 	ld (SMCLoadZ),hl
+	call _matrixRow0Multiply
+	ld de,(cx) 
+	add hl,de
+	ld (SMCLoadX),hl 
+	call _matrixRow1Multiply
+	ld de,(cy)
+	add hl,de
+	ld (SMCLoadY),hl
+	call _matrixRow2Multiply
+	ld de,(cz)
+	add hl,de
+	ld (SMCLoadZ),hl
+	
+	ld de,(ix+9)  ; de = vertex count
+	ld ix,(ix+13) ; ix = vertex pointer
+	
 	ld iy,_vertexCache 
 	ex.sis de,hl 
 	ld de,1
+	jp projloop
 	
+;---------------------------------------------------------	
+virtual at $E308E0
+_matrixRoutine:
+
 projloop: 	
 	exx 
 	call _matrixRow2Multiply

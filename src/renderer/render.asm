@@ -11,6 +11,8 @@ extern _faceBucket
 extern _faceCache
 extern _callShader
 extern _clearCanvas
+extern _setCameraPosition
+extern _currentShader
 
 extern _ZinvLUT
 
@@ -83,6 +85,9 @@ _renderObjects:
 	ld bc,_faceCache 
 	ld (facePointer),bc
 	
+	; load camera matrix
+	call _setCameraPosition
+	
 ; process sprites 
 processSprites:
 	ld a,(_numSprites) 
@@ -141,9 +146,7 @@ spriteloop:
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	bit 1,a ; if 32 pixel shader 
-	jr nz,$+3 
-	add hl,hl 
+	add hl,hl
 	ld (tbx),hl 
 	ld (tcy),hl 
 	
@@ -436,57 +439,9 @@ faceloop:
 	ld hl,512 
 	add hl,sp
 	rl h 
-	jq nc,shader16 
-_shader32: 
-	ld a,2 
-	add a,(tshader) 
-	ld (tshader),a
+	jq nc,$+6 
+	set 1,(tshader)
 	
-	ld hl,(tay) 
-	ld de,(tax) 
-	sra h 
-	rr l 
-	sra h 
-	rr l 
-	ld (tay),hl
-	ex de,hl  
-	sra h 
-	rr l 
-	sra h 
-	rr l 
-	ld de,(tby)
-	ld (tax),hl
-	
-	ex de,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tbx) 
-	ld (tby),hl 
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tcy) 
-	ld (tbx),hl  
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tcx)
-	ld (tcy),hl  
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tcx),l 
-	ld (tcx+1),h
-	
-	jq copyFace 
-shader16: 
 	ld hl,(tby) 
 	add hl,hl
 	add hl,hl
@@ -541,6 +496,8 @@ StoreSP:=$-3
 	
 ; iterates through face buckets and renders faces
 renderFaces: 
+	ld a,$FF 
+	ld (_currentShader),a
 	ld hl,(bucketMax) 
 	ld de,(bucketMin) 
 	or a,a 

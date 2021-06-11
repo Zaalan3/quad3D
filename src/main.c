@@ -26,10 +26,10 @@ extern object_t zelda;
 
 int main(void)
 {
-	uint8_t ay = 128;
+	uint8_t ay = 0;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	vertex_t pos = {16,0,48};
+	vertex_t pos = {0,0,-40};
 	billboard_t spr = {0,20,0,0,0};
     initRenderer();
 	gfx_SetPalette(global_palette,sizeof_global_palette,0);
@@ -37,7 +37,7 @@ int main(void)
 	//memset((void *)0xD48000,0xFF,32*1024);
 		
 
-	activeObject[0] = &zelda;
+	activeObject[0] = &monkey;
 	numObjects = 1;
 	
 	/*
@@ -57,7 +57,6 @@ int main(void)
 	
 	
 	setCameraAngle(ax,ay,az);
-	setCameraPosition(&pos);
 	kb_Scan();
 	while(!kb_IsDown(kb_KeyClear)) { 
 			
@@ -79,7 +78,10 @@ int main(void)
 			pos.z++; 
 		}
 		
-		setCameraPosition(&pos);
+		cameraMatrix.x = pos.x;
+		cameraMatrix.y = pos.y;
+		cameraMatrix.z = pos.z;
+		
 		clearCanvas();
 		startTimer(); 
 		renderObjects(); 

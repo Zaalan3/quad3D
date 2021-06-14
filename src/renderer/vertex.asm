@@ -198,10 +198,14 @@ _transformVertices:
 loop:
 	exx 
 	call _matrixRow0Multiply
-	ld (iy+0),hl 
+	push hl  
 	call _matrixRow1Multiply
-	ld (iy+2),hl 
+	push hl  
 	call _matrixRow2Multiply
+	pop de 
+	pop bc 
+	ld (iy+0),bc 
+	ld (iy+0),de 
 	ld (iy+4),l 
 	ld (iy+5),h 
 	lea ix,ix+6 

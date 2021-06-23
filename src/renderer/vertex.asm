@@ -205,7 +205,7 @@ loop:
 	pop de 
 	pop bc 
 	ld (iy+0),bc 
-	ld (iy+0),de 
+	ld (iy+2),de 
 	ld (iy+4),l 
 	ld (iy+5),h 
 	lea ix,ix+6 

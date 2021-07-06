@@ -678,6 +678,7 @@ SMCLoadZ:=$-3
 	add.sis hl,de
 	ret 
 	
+assert $<$E30B00
 load _matrixroutine_data: $-$$ from $$
 _matrixroutine_len := $-$$
 end virtual

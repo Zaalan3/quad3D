@@ -1,11 +1,11 @@
 //Model from zelda.obj
 #include "renderer/renderer.h"
 
-face_t faces[349];
-vertex_t verts[824];
+static face_t faces[349];
+static vertex_t verts[824];
 
 object_t zelda = {0,0,0,0,0,0,824,349,verts,faces};
-face_t faces[349] = { 
+static face_t faces[349] = { 
 	{0,0,0,0,11,13,12,10},
 	{0,0,0,0,15,17,16,14},
 	{0,0,0,0,13,15,14,12},
@@ -356,7 +356,7 @@ face_t faces[349] = {
 	{0,0,0,0,684,686,685,683},
 	{0,0,0,0,548,550,549,547}
 };
-vertex_t verts[824] = { 
+static vertex_t verts[824] = { 
 	{-8,13,-1},
 	{-8,13,-1},
 	{-8,13,0},

@@ -11,8 +11,9 @@ typedef struct {
 } vertex_t; 
 
 enum shader_type { 
-	QUAD = 0, 
-	SPRITE
+	SHADER_TEXTURED = 0,
+	SHADER_TRANSPARENT = 4, 
+	SHADER_FLAT = 8
 }; 
 
 // 12 bytes 
@@ -48,33 +49,22 @@ typedef struct {
 #define OOB 0xFF
 
 // 8 bytes 
-typedef struct { 
+struct vertex_cached { 
 	int16_t xs,ys; // screen position
 	uint8_t depth; // z 
 	uint8_t outcode; // clipping outcode  
 	uint8_t rs0,rs1; // reserved
-} vertex_cached_t; 
+} ; 
 
-
-enum face_type {
-	UNCLIPPED_16=0, 
-	CLIPPED_16,
-	UNCLIPPED_32,  
-	CLIPPED_32,
-	UNCLIPPED_TRANSPARENT_16, 
-	CLIPPED_TRANSPARENT_16,
-	UNCLIPPED_TRANSPARENT_32,  
-	CLIPPED_TRANSPARENT_32,
-}; 
 
 // 22 bytes
-typedef struct {  
+struct face_cached {  
 	uint8_t shader; 
 	uint8_t light;
 	uint8_t u0,v0;	
 	int16_t x0,y0;
 	int16_t ay,ax,by,bx,cy,cx;
 	uint16_t next;
-} face_cached_t; 
+}; 
 
 #endif 

@@ -8,7 +8,7 @@ typedef struct {
 } translation_matrix_t;
 
 
-// transforms source vertices and stores them at the destination.
+// transforms source vertices and stores them at the destination(Safe for self modification)
 void transformVertices(translation_matrix_t* matrix,vertex_t* src,vertex_t* dest,int num); 
 
 // builds a matrix from provided angles

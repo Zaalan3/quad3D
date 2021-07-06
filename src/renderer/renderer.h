@@ -20,18 +20,18 @@ extern translation_matrix_t cameraMatrix;
 
 // active object list
 extern uint8_t numObjects;
-extern object_t* activeObject[64];
+extern object_t* activeObject[255];
 
 extern uint8_t numSprites; 
-extern billboard_t activeSprite[64];
+extern billboard_t activeSprite[255];
 
 // processed vertices
 // 8 kb
-extern vertex_cached_t vertexCache[1024]; 
+extern struct vertex_cached vertexCache[1024]; 
 
 // visible faces cache
 // 22 kb on heap
-extern face_cached_t faceCache[1024]; 
+extern struct face_cached faceCache[1024]; 
 
 // face bucket linked list
 // stores first face for each distance
@@ -50,7 +50,7 @@ void blitCanvas(void);
 // clears the canvas
 void clearCanvas(void); 
 
-// renders objects and sprites to canvas. Clears canvas.
+// renders objects and sprites to canvas.
 void renderObjects(void);
 
 #define setCameraAngle(ax,ay,az) eulerToMatrix(&cameraMatrix,ax,ay,az) 

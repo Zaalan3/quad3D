@@ -1,5 +1,9 @@
 public _renderObjects
 
+public _renderFaces
+public _renderFaces_src
+public _renderFaces_len
+
 extern _activeSprite
 extern _numSprites
 extern _activeObject
@@ -16,13 +20,6 @@ extern _currentShader
 
 extern _ZinvLUT
 
-spriteX equ iy+0 
-spriteY equ iy+2 
-spriteDepth equ iy+4 
-spriteOutcode equ iy+5 
-spriteU equ iy+6 
-spriteV equ iy+7 
-
 shader equ iy+0
 light equ iy+1	
 u0 equ iy+2
@@ -33,7 +30,7 @@ vt2 equ iy+8
 vt3 equ iy+10
 	
 numFaces equ ix+0 
-facePointer equ ix+3 
+cachePointer equ ix+3 
 bucketMin equ ix+6 
 bucketMax equ ix+9
 
@@ -54,19 +51,28 @@ y3 equ ix+32
 depth3 equ ix+34
 outcode3 equ ix+35 
 
-tshader equ ix+36
-tlight equ ix+37
-tu0 equ ix+38
-tv0 equ ix+39
-tx0 equ ix+40
-ty0 equ ix+42
-tay equ ix+44
-tax equ ix+46 
-tby equ ix+48
-tbx equ ix+50
-tcy equ ix+52
-tcx equ ix+54
-tnext equ ix+56 
+facePointer equ ix+36
+
+spriteX equ ix+39 
+spriteY equ ix+41
+spriteDepth equ ix+43 
+spriteOutcode equ ix+44  
+spriteU equ ix+45
+spriteV equ ix+46
+
+tshader equ iy+0
+tlight equ iy+1
+tu0 equ iy+2
+tv0 equ iy+3
+tx0 equ iy+4
+ty0 equ iy+6
+tay equ iy+8
+tax equ iy+10
+tby equ iy+12
+tbx equ iy+14
+tcy equ iy+16
+tcx equ iy+18
+tnext equ iy+20
 
 _renderObjects: 
 	push ix
@@ -83,7 +89,7 @@ _renderObjects:
 	ld bc,1024
 	ld (bucketMin),bc 
 	ld bc,_faceCache 
-	ld (facePointer),bc
+	ld (cachePointer),bc
 	
 	; load camera matrix
 	call _setCameraPosition
@@ -97,17 +103,29 @@ processSprites:
 	ld iy,_vertexCache	
 	call _projectSprites
 	ld ix,$E10010
+	ld (facePointer),iy 
+	ld iy,(cachePointer)
 spriteloop: 
 	exx 
+	ld hl,(facePointer)
+	lea de,spriteX 
+	ld bc,8 
+	ldir 
+	ld (facePointer),hl 
+	
 	ld a,(spriteOutcode) 
 	cp a,$FF 	; skip if out of bounds 
 	jq Z,skipSprite 
 	tst a,0101b 	; skip if vertex is to the right of or below the screen
 	jq nz,skipSprite 
 	and a,0010b 
-	ld b,0 
-	jr Z,$+3  
+	jr Z,findWidth  
 	inc b 
+	ld hl,(spriteY) 
+	ld de,16 
+	add.sis hl,de
+	jq nc,skipSprite
+findWidth:
 ; compute width and height
 	or a,a 
 	sbc hl,hl 
@@ -142,13 +160,8 @@ spriteloop:
 	add a,4 
 	ld (tshader),a 
 ; set face entry 
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tbx),hl 
-	ld (tcy),hl 
+	ld (tbx),de 
+	ld (tcy),de 
 	
 	ld hl,(spriteU) 
 	ld (tu0),hl 
@@ -193,17 +206,15 @@ spriteloop:
 	inc de 	
 	ld (numFaces),de
 	
-	; copy face 
-	ld de,(facePointer)
-	lea hl,tshader 
-	ld bc,22 
-	ldir 
-	ld (facePointer),de 
+	; next face 
+	lea iy,iy+22 
+	
 skipSprite:
 	exx
 	dec b 
 	jq nz,spriteloop
 	
+	ld (cachePointer),iy
 ;----------------------------------------
 ; process 3D objects 
 processObjects:
@@ -213,6 +224,9 @@ processObjects:
 	ld b,a
 	ld iy,_activeObject 
 	
+	ld hl,-3 
+	add hl,sp 
+	ld (StoreSP),hl
 objectloop: 
 	pea iy+3 
 	ld iy,(iy)
@@ -223,7 +237,6 @@ cacheFaces:
 	ld ix,$E10010
 	ld hl,1 
 	ex.sis hl,de
-	ld (StoreSP),sp
 faceloop:
 	exx 
 	; fetch vertices 
@@ -284,45 +297,52 @@ faceloop:
 	and a,3 
 	jr Z,$+3
 	inc b 
-	ld (tshader),b 
 	
+	; swap iy 
+	ld hl,(light)
+	ld (facePointer),iy 
+	ld iy,(cachePointer)
+	
+	ld (tshader),b 
+	; copy light,u0 & v0,x0 & y0 
+	ld (tlight),hl 
 	
 	; by = y3 - y0 
 	ld hl,(y3) 
 	ld de,(y0) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tby),hl 
 	
 	; cy = y1 - y0 
 	ld hl,(y1) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tcy),hl 
 	
 	;bx = x3 - x0 
 	ld hl,(x3) 
 	ld de,(x0) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tbx),l
 	ld (tbx+1),h
 	
 	;cx = x1 - x0 
 	ld hl,(x1) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tcx),hl
-	
+			
 	; area = (x2-x0)*(cy-by) + (y2-y0)*(bx-cx)
 	ld hl,(x2) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ex de,hl
 	ld hl,(tcy) 
 	ld bc,(tby) 
 	or a,a 
-	sbc.sis hl,bc
+	sbc hl,bc
 	;hl*de 
 	ld b,l 
 	ld c,e 
@@ -341,12 +361,12 @@ faceloop:
 	ld hl,(y2) 
 	ld de,(y0)
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ex de,hl
 	ld hl,(tbx) 
 	ld bc,(tcx) 
 	or a,a 
-	sbc.sis hl,bc
+	sbc hl,bc
 	;hl*de 
 	ld b,l 
 	ld c,e 
@@ -363,37 +383,34 @@ faceloop:
 	add hl,sp 
 	; skip if area >= 0 
 	bit 7,h 
-	jq z,skipFace 
-	ld sp,hl
+	jq z,loadFacePointer 
+	
+	; if area<-512  then use chunky shader
+	ld de,512 
+	add.sis hl,de 
+	jq c,$+6 
+	set 1,(tshader)
 	
 	; ay = y0 - y1 - y3 + y2 = y2 - by - y1 
 	ld hl,(y2) 
 	ld de,(tby)
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld de,(y1) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tay),hl
 	
 	; ax = x0 - x1 - x3 + x2 = x2 - bx - x1 
 	ld hl,(x2) 
 	ld de,(tbx)
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld de,(x1) 
 	or a,a 
-	sbc.sis hl,de 
+	sbc hl,de 
 	ld (tax),l 
 	ld (tax+1),h
-	
-	; copy light,u0 & v0,x0 & y0 
-	ld hl,(light) 
-	ld (tlight),hl 
-	ld hl,(x0) 
-	ld (tx0),hl 
-	ld a,(y0+1) 
-	ld (ty0+1),a
 	
 	; find sum of distances (8.2 average)  
 	or a,a 
@@ -408,9 +425,10 @@ faceloop:
 	add hl,de 
 	ld e,(depth3) 
 	add hl,de 
-	dec hl
+	dec hl	
+
 	; update min and max buckets 
-	ex de,hl 
+	ex de,hl
 	ld hl,(bucketMax) 
 	or a,a 
 	sbc hl,de 
@@ -435,56 +453,18 @@ faceloop:
 	inc de 	
 	ld (numFaces),de
 	
-	; if area >= -512 then use 16x16 shader
-	ld hl,512 
-	add hl,sp
-	rl h 
-	jq nc,$+6 
-	set 1,(tshader)
+	ld hl,(x0) 
+	ld (tx0),hl 
+	ld a,(y0+1) 
+	ld (ty0+1),a
 	
-	ld hl,(tby) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tbx) 
-	ld (tby),hl 
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tcy) 
-	ld (tbx),hl  
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld de,(tcx)
-	ld (tcy),hl  
-	
-	ex de,hl 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld (tcx),l 
-	ld (tcx+1),h
-	
-copyFace: 
-	; copy face to cache 
-	ld de,(facePointer)
-	lea hl,tshader 
-	ld bc,22 
-	ldir 
-	ld (facePointer),de 
-	
+	lea iy,iy+22 
+	ld (cachePointer),iy 
+loadFacePointer: 
+	ld iy,(facePointer) 
 skipFace: 
-	exx 
 	lea iy,iy+12 
+	exx 
 	or a,a 
 	sbc hl,de 
 	jq nz,faceloop 
@@ -493,9 +473,11 @@ StoreSP:=$-3
 	pop iy 
 	dec b 
 	jq nz,objectloop
+	jp _renderFaces
 	
+virtual at $E30B00
 ; iterates through face buckets and renders faces
-renderFaces: 
+_renderFaces: 
 	ld a,$FF 
 	ld (_currentShader),a
 	ld hl,(bucketMax) 
@@ -556,6 +538,12 @@ return:
 	pop ix 
 	ret 
 	
+assert $<$E30B80
+load _renderFaces_data: $-$$ from $$
+_renderFaces_len := $-$$
+end virtual
+_renderFaces_src:
+	db _renderFaces_data
 	
 
 	

@@ -8,13 +8,13 @@
 
 // active object list
 uint8_t numObjects;
-object_t* activeObject[64];
+object_t* activeObject[255];
 
 uint8_t numSprites; 
-billboard_t activeSprite[64];
+billboard_t activeSprite[255];
 
 // visible faces cache
-face_cached_t faceCache[1024]; 
+struct face_cached faceCache[1024]; 
 
 // camera matrix
 translation_matrix_t cameraMatrix;

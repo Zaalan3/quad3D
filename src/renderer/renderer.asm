@@ -21,6 +21,10 @@ extern _matrixRoutine
 extern _matrixroutine_src
 extern _matrixroutine_len
 
+extern _renderFaces
+extern _renderFaces_src
+extern _renderFaces_len
+
 _initRenderer: 
 	; initialize screen 
 	; sets screen buffer to $D52C00. $D40000 reserved for canvas and texture page( so no double buffering ) 
@@ -51,6 +55,11 @@ _initRenderer:
 	ld de,_matrixRoutine
 	ld hl,_matrixroutine_src
 	ld bc,_matrixroutine_len 
+	ldir 
+	
+	ld de,_renderFaces
+	ld hl,_renderFaces_src
+	ld bc,_renderFaces_len
 	ldir 
 	
 	; reset global variables

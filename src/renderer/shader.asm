@@ -5,6 +5,8 @@ public _bilerp_len
 public _bilerp_src
 public _currentShader
 
+extern canvas_height
+
 shaderRoutine:=$E10010 
 
 shader equ iy+0
@@ -32,10 +34,16 @@ shaderTable:
 	shaderEntry bilerp16_clipped,bilerp16_clipped_len,4
 	shaderEntry bilerp32,bilerp32_len,8 
 	shaderEntry bilerp32_clipped,bilerp32_clipped_len,8
+	
 	shaderEntry bilerp16_transparent,bilerp16_transparent_len,4 
 	shaderEntry bilerp16_transparent_clipped,bilerp16_transparent_clipped_len,8
 	shaderEntry bilerp32_transparent,bilerp32_transparent_len,8 
-	shaderEntry bilerp32_transparent_clipped,bilerp32_transparent_clipped_len,8 
+	shaderEntry bilerp32_transparent_clipped,bilerp32_transparent_clipped_len,8
+	
+	shaderEntry bilerp16_flat,bilerp16_flat_len,4 
+	shaderEntry bilerp16_flat_clipped,bilerp16_flat_clipped_len,4
+	shaderEntry bilerp32_flat,bilerp32_flat_len,8
+	shaderEntry bilerp32_flat_clipped,bilerp32_flat_clipped_len,8
 	
 _currentShader: 
 	db $FF
@@ -82,17 +90,31 @@ cont:
 	ld hl,(ay) 
 	ld (SMCloadAY),hl
 	ld hl,(cx) 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
 	ld a,h 
 	ld (SMCloadCXH),a
 	ld a,l 
 	ld (SMCloadCXL),a
 	ld hl,(cy) 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
 	ld (SMCloadCY),hl
 
+	ld hl,(by)
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	ex de,hl ; de = dy
+	
 	ld h,(y0) 	; hl = y 
 	ld l,0 
 	ld.sis sp,hl 	; sps = yi
-	ld de,(by)
 	exx 
 	ld a,(x0) 
 	ld ix,0 
@@ -104,6 +126,10 @@ cont:
 	ld c,(u0) 
 	ld de,$D40000
 	ld hl,(bx) 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
 	ld sp,hl 
 	lea hl,ix+0
 	
@@ -279,9 +305,9 @@ bilerp32_clipped:
 repeat 2
 	ld a,h 
 	exx 
-	ld d,a 
-	rlca 
-	jr c,$+11
+	cp a,canvas_height 
+	jr nc,$+12
+	ld d,a
 	ld e,h 
 	ld a,(bc)
 	ld (de),a 
@@ -334,9 +360,9 @@ bilerp32_transparent_clipped:
 repeat 2
 	ld a,h 
 	exx 
+	cp a,canvas_height 
+	jr nc,$+15
 	ld d,a 
-	rlca 
-	jr c,$+14 
 	ld e,h 
 	ld a,(bc)
 	or a,a 
@@ -358,3 +384,91 @@ end repeat
 	
 bilerp32_transparent_clipped_len:=$-bilerp32_transparent_clipped
 assert bilerp32_transparent_clipped_len <= 64 
+
+;-----------------------------------
+bilerp16_flat: 
+repeat 4 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,iyl 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat 
+	djnz bilerp16_flat
+	jp bilerp_vloop
+bilerp16_flat_len:=$-bilerp16_flat
+assert bilerp16_flat_len <= 64 
+
+;-----------------------------------
+bilerp16_flat_clipped: 
+repeat 4 
+	ld a,h 
+	exx 
+	ld d,a 
+	rlca 
+	jr c,$+6 
+	ld e,h 
+	ld a,iyl 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat 
+	djnz bilerp16_flat_clipped
+	jp bilerp_vloop
+bilerp16_flat_clipped_len:=$-bilerp16_flat_clipped
+assert bilerp16_flat_clipped_len <= 64 
+
+;-----------------------------------
+bilerp32_flat: 
+repeat 2 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,iyl 
+	ld (de),a 
+	inc e 
+	ld (de),a 
+	inc d
+	ld (de),a 
+	dec e
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+end repeat
+	djnz bilerp32_flat
+	jp bilerp_vloop 
+bilerp32_flat_len:=$-bilerp32_flat
+assert bilerp32_flat_len <= 64
+
+;-----------------------------------
+bilerp32_flat_clipped: 
+repeat 2 
+	ld a,h 
+	exx 
+	cp a,canvas_height
+	jr nc,$+13
+	ld d,a 
+	ld e,h 
+	ld a,iyl 
+	ld (de),a 
+	inc e 
+	ld (de),a 
+	inc d
+	ld (de),a 
+	dec e
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+end repeat
+	djnz bilerp32_flat_clipped
+	jp bilerp_vloop 
+bilerp32_flat_clipped_len:=$-bilerp32_flat_clipped
+assert bilerp32_flat_clipped_len <= 64

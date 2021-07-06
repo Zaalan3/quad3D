@@ -18,6 +18,9 @@
 extern object_t squareModel;
 extern object_t monkey;
 extern object_t zelda;
+extern object_t grid;
+
+extern vertex_t verts[45];
 
 #define startTimer() timer_1_Counter = 0; \
 					timer_Control = TIMER1_ENABLE|TIMER1_CPU|TIMER1_UP;
@@ -26,24 +29,22 @@ extern object_t zelda;
 
 int main(void)
 {
-	uint8_t ay = 0;
+	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	vertex_t pos = {0,0,-40};
-	billboard_t spr = {0,20,0,0,0};
+	billboard_t spr = {0,20,0,16,0}; 
+	
+	vertex_t pos = {0,5,40};
+	
     initRenderer();
-	gfx_SetPalette(global_palette,sizeof_global_palette,0);
 	loadTextureMapCompressed(tileset_compressed);
-	//memset((void *)0xD48000,0xFF,32*1024);
-		
 
-	activeObject[0] = &monkey;
+	activeObject[0] = &grid;
 	numObjects = 1;
 	
-	/*
-	activeSprite[0] = spr;
-	numSprites = 1;
-	*/
+	// activeSprite[0] = spr;
+	// numSprites = 1;
+	
 	gfx_SetColor(0xFF); 
 	
 	gfx_HorizLine(80,59,160);
@@ -77,6 +78,16 @@ int main(void)
 		} else if(kb_IsDown(kb_Key2)) { 
 			pos.z++; 
 		}
+		
+		if(kb_IsDown(kb_Key5)) { 
+		// TODO: figure out switch statements for non integers 
+			if(activeObject[0] == &grid)
+				activeObject[0] = &zelda;
+			else if(activeObject[0] == &zelda)
+				activeObject[0] = &monkey;
+			else 
+				activeObject[0] = &grid; 
+		} 
 		
 		cameraMatrix.x = pos.x;
 		cameraMatrix.y = pos.y;

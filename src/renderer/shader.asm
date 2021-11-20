@@ -14,14 +14,14 @@ light equ iy+1
 u0 equ iy+2
 v0 equ iy+3
 x0 equ iy+4
-y0 equ iy+6
-ay equ iy+8
-ax equ iy+10
-by equ iy+12
-bx equ iy+14
-cy equ iy+16
-cx equ iy+18
-next equ iy+20
+y0 equ iy+5
+ay equ iy+6
+ax equ iy+8
+by equ iy+10
+bx equ iy+12
+cy equ iy+14
+cx equ iy+16
+next equ iy+18
 
 macro shaderEntry? shader,length,size 
 	emit 3: shader 
@@ -185,6 +185,7 @@ SMCloadCount:=$-1
 SMCloadSP:=$-3 
 	ret 
 	
+	
 assert $ < $E308E0
 load _bilerp_data: $-$$ from $$
 _bilerp_len := $-$$
@@ -217,8 +218,8 @@ repeat 4
 	ld a,h 
 	exx 
 	ld d,a 
-	rlca 
-	jr c,$+5
+	cp a,canvas_height
+	jr nc,$+5
 	ld e,h 
 	ld a,(bc) 
 	ld (de),a 
@@ -258,8 +259,8 @@ repeat 2
 	ld a,h 
 	exx 
 	ld d,a 
-	rlca 
-	jr c,$+8
+	cp a,canvas_height 
+	jr nc,$+8
 	ld e,h 
 	ld a,(bc) 
 	or a,a 
@@ -409,8 +410,8 @@ repeat 4
 	ld a,h 
 	exx 
 	ld d,a 
-	rlca 
-	jr c,$+6 
+	cp a,canvas_height 
+	jr nc,$+6 
 	ld e,h 
 	ld a,iyl 
 	ld (de),a 

@@ -41,9 +41,9 @@ int main(void)
 
 	activeObject[0] = &grid;
 	numObjects = 1;
-	
-	// activeSprite[0] = spr;
-	// numSprites = 1;
+	gfx_SetPalette(global_palette,32,0); 
+	activeSprite[0] = spr;
+	numSprites = 1;
 	
 	gfx_SetColor(0xFF); 
 	

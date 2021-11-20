@@ -65,14 +65,14 @@ tlight equ iy+1
 tu0 equ iy+2
 tv0 equ iy+3
 tx0 equ iy+4
-ty0 equ iy+6
-tay equ iy+8
-tax equ iy+10
-tby equ iy+12
-tbx equ iy+14
-tcy equ iy+16
-tcx equ iy+18
-tnext equ iy+20
+ty0 equ iy+5
+tay equ iy+6
+tax equ iy+8
+tby equ iy+10
+tbx equ iy+12
+tcy equ iy+14
+tcx equ iy+16
+tnext equ iy+18
 
 _renderObjects: 
 	push ix
@@ -116,15 +116,8 @@ spriteloop:
 	ld a,(spriteOutcode) 
 	cp a,$FF 	; skip if out of bounds 
 	jq Z,skipSprite 
-	tst a,0101b 	; skip if vertex is to the right of or below the screen
+	tst a,0111b 	; skip if vertex offscreen
 	jq nz,skipSprite 
-	and a,0010b 
-	jr Z,findWidth  
-	inc b 
-	ld hl,(spriteY) 
-	ld de,16 
-	add.sis hl,de
-	jq nc,skipSprite
 findWidth:
 ; compute width and height
 	or a,a 
@@ -137,8 +130,7 @@ findWidth:
 	inc hl 
 	ld d,(hl) 
 	ex.sis de,hl
-	; size = 8*f/z
-	add hl,hl
+	; size = 4*f/z
 	add hl,hl
 	add hl,hl
 	push hl 
@@ -165,10 +157,9 @@ findWidth:
 	
 	ld hl,(spriteU) 
 	ld (tu0),hl 
-	ld hl,(spriteX) 
-	ld (tx0),hl 
-	ld a,(spriteY+1) 
-	ld (ty0+1),a
+	ld h,(spriteY)  
+	ld l,(spriteX) 
+	ld (tx0),hl
 	xor a,a 
 	sbc hl,hl 
 	ld (tay),hl 
@@ -207,7 +198,7 @@ findWidth:
 	ld (numFaces),de
 	
 	; next face 
-	lea iy,iy+22 
+	lea iy,iy+20 
 	
 skipSprite:
 	exx
@@ -453,12 +444,12 @@ faceloop:
 	inc de 	
 	ld (numFaces),de
 	
-	ld hl,(x0) 
-	ld (tx0),hl 
-	ld a,(y0+1) 
-	ld (ty0+1),a
+	ld a,(x0)
+	ld (tx0),a
+	ld a,(y0) 
+	ld (ty0),a
 	
-	lea iy,iy+22 
+	lea iy,iy+20 
 	ld (cachePointer),iy 
 loadFacePointer: 
 	ld iy,(facePointer) 
@@ -496,24 +487,23 @@ _renderFaces:
 	push ix-2 
 bucketloop:
 	bit 7,d 
-	jr nz,skipbucket 
-	ld h,22 
-	ld l,d 
-	ld d,h 
-	mlt hl 
-	mlt de 
+	jr nz,skipbucket
+	; de*20
+	ld h,d 
+	ld l,e 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
+	ex de,hl 
 	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,de 
+	add hl,hl 
+	add hl,de
+	ex.sis de,hl	; clears uDE
+	
 	ld iy,_faceCache
 	add iy,de 
-	ld de,(iy+20) 
+	ld de,(iy+18) 
 	push de 
 	call _callShader 
 	pop de 

@@ -57,12 +57,12 @@ struct vertex_cached {
 } ; 
 
 
-// 22 bytes
+// 20 bytes
 struct face_cached {  
 	uint8_t shader; 
 	uint8_t light;
 	uint8_t u0,v0;	
-	int16_t x0,y0;
+	int8_t x0,y0;
 	int16_t ay,ax,by,bx,cy,cx;
 	uint16_t next;
 }; 

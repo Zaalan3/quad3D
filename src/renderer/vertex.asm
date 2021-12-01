@@ -172,6 +172,9 @@ _setCameraPosition:
 	ld (cy),de
 	ld (cz),l 
 	ld (cz+1),h
+	ld (SMCLoadX),bc
+	ld (SMCLoadY),de
+	ld (SMCLoadZ),hl
 	pop ix
 	ret
 
@@ -222,22 +225,9 @@ _projectSprites:
 	push iy 
 	push bc 
 	ld a,8
-	ld (SMCSizeVertex),a
+	ld (SMCSizeVertex),a ; billboard size different then regular vertex
 	
-	ld ix,_activeSprite 
-	ld iy,_cameraMatrix
-; half size of a sprite, displacement of topleft corner from sprite center(in local space)
-	ld de,8 
-	ld hl,(cx)
-	or a,a 
-	sbc.sis hl,de 
-	ld (SMCLoadX),hl
-	ld hl,(cy) 
-	add hl,de 
-	ld (SMCLoadY),hl
-	ld hl,(cz) 
-	ld (SMCLoadZ),hl
-	
+	ld ix,_activeSprite 	
 	ld iy,_vertexCache
 	or a,a 
 	sbc hl,hl 
@@ -272,8 +262,8 @@ _projectVertices:
 	add hl,de
 	ld (SMCLoadZ),hl
 	
-	ld de,(ix+9)  ; de = vertex count
-	ld ix,(ix+13) ; ix = vertex pointer
+	ld de,(ix+6)  ; de = vertex count
+	ld ix,(ix+10) ; ix = vertex pointer
 	
 	ld iy,_vertexCache 
 	ex.sis de,hl 

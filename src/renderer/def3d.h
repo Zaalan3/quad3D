@@ -24,18 +24,19 @@ typedef struct {
 	uint16_t vt0,vt1,vt2,vt3; 	// vertices of face
 } face_t; 
 
-// 19 bytes
+// 16 bytes
 typedef struct { 
 	int16_t x; 
 	int16_t y;
 	int16_t z;
-	uint8_t ax,ay,az;
 	uint16_t vertnum;
 	uint16_t facenum; 
 	vertex_t* vertex;
 	face_t* face;
 } object_t; 
 
+// for easy defines
+#define packNibble(x,y) (16*y + x)
 // 8 bytes 
 typedef struct { 
 	int16_t x,y,z; 

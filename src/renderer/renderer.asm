@@ -12,6 +12,7 @@ extern port_privilege_unlock
 extern port_privilege_lock
 
 extern _numObjects
+extern _numSprites
 
 extern _bilerpShader
 extern _bilerp_len
@@ -20,10 +21,6 @@ extern _bilerp_src
 extern _matrixRoutine
 extern _matrixroutine_src
 extern _matrixroutine_len
-
-extern _renderFaces
-extern _renderFaces_src
-extern _renderFaces_len
 
 _initRenderer: 
 	; initialize screen 
@@ -57,14 +54,10 @@ _initRenderer:
 	ld bc,_matrixroutine_len 
 	ldir 
 	
-	ld de,_renderFaces
-	ld hl,_renderFaces_src
-	ld bc,_renderFaces_len
-	ldir 
-	
 	; reset global variables
 	xor a,a
 	ld (_numObjects),a
+	ld (_numSprites),a
 	
 	ret 
 	

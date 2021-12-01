@@ -49,8 +49,6 @@ _currentShader:
 	db $FF
 	
 ;-----------------------------------
-virtual at $E30800
-_bilerpShader:
 
 ; iy = cached face pointer
 _callShader: 
@@ -63,10 +61,10 @@ _callShader:
 	ld de,shaderTable
 	add hl,de 
 	or a,a 
-	jr nz,loadShader 
+	jr nz,loadShader  ; skip shader if already loaded 
 	ld bc,4 
 	add hl,bc 
-	ld a,(hl) 
+	ld a,(hl) 	; fetch length for shader again 
 	jr cont 
 loadShader:
 	ld de,(hl) 
@@ -79,8 +77,8 @@ loadShader:
 	ld de,shaderRoutine
 	ldir 	
 cont:
-	; load variables
-	ld (SMCloadSP),sp
+	; load variables and SMC bytes 
+	ld (SMCloadSP),sp	
 	ld c,16 
 	ld b,a 		; b = u count
 	ld (SMCloadCount),a
@@ -89,6 +87,7 @@ cont:
 	ld (SMCloadAX),hl
 	ld hl,(ay) 
 	ld (SMCloadAY),hl
+	;fixed point conversion (256*n/16) = 16*n 
 	ld hl,(cx) 
 	add hl,hl
 	add hl,hl
@@ -98,6 +97,7 @@ cont:
 	ld (SMCloadCXH),a
 	ld a,l 
 	ld (SMCloadCXL),a
+	
 	ld hl,(cy) 
 	add hl,hl
 	add hl,hl
@@ -140,6 +140,7 @@ cont:
 	exx 
 	jp shaderRoutine
 	
+; register state after above
 ; hl = y 
 ; de = dy 
 ; b = u counter 
@@ -153,7 +154,16 @@ cont:
 ; iyl = light
 ; ix = xi 
 
+virtual at $E30800
+_bilerpShader:
 
+; called after each line drawn to update deltas and counters for next line.
+; xi += cx 
+; x = xi 
+; yi += cy
+; y = yi 
+; dy += ay 
+; dx += ax 
 bilerp_vloop: 
 	exx 
 	ld d,0 
@@ -162,8 +172,8 @@ SMCloadCXH:=$-1
 SMCloadCXL:=$-1
 	add ix,de 
 	lea hl,ix+0 
-	inc b
-	ld c,iyh
+	inc b	 ; v++ 
+	ld c,iyh ; u = u0 
 	exx 
 	ld hl,0 
 SMCloadAY:=$-3 
@@ -177,7 +187,7 @@ SMCloadAX:=$-3
 SMCloadCY:=$-3 
 	add.sis hl,sp 
 	ld.sis sp,hl 
-	ld b,0 
+	ld b,0 	; reset u count
 SMCloadCount:=$-1 
 	dec c 
 	jp nz,shaderRoutine 
@@ -253,14 +263,15 @@ end repeat
 	jp bilerp_vloop
 bilerp16_transparent_len:=$-bilerp16_transparent
 assert bilerp16_transparent_len <= 64 	
+
 ;-----------------------------------
 bilerp16_transparent_clipped: 
 repeat 2
 	ld a,h 
-	exx 
-	ld d,a 
+	exx  
 	cp a,canvas_height 
-	jr nc,$+8
+	jr nc,$+9
+	ld d,a
 	ld e,h 
 	ld a,(bc) 
 	or a,a 

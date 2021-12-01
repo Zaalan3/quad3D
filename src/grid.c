@@ -4,7 +4,7 @@
 
 vertex_t verts[45];
 static face_t faces[32];
-object_t grid = {0,0,0,0,0,0,45,32,verts,faces};
+object_t grid = {0,0,0,45,32,verts,faces};
 static face_t faces[32] = { 
 	{SHADER_TEXTURED,255,0,0,0,1,10,9},
 	{SHADER_TEXTURED,255,0,0,1,2,11,10},

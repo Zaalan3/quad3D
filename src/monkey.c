@@ -5,7 +5,7 @@
 static face_t faces[499];
 static vertex_t verts[507];
 
-object_t monkey = {0,0,0,0,0,0,507,499,verts,faces};
+object_t monkey = {0,0,0,507,499,verts,faces};
 static face_t faces[499] = { 
 	{0,0,0,0,46,0,2,44},
 	{0,0,0,0,3,1,47,45},

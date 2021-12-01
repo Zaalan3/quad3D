@@ -1,8 +1,5 @@
 public _renderObjects
 
-public _renderFaces
-public _renderFaces_src
-public _renderFaces_len
 
 extern _activeSprite
 extern _numSprites
@@ -116,40 +113,36 @@ spriteloop:
 	ld a,(spriteOutcode) 
 	cp a,$FF 	; skip if out of bounds 
 	jq Z,skipSprite 
-	tst a,0111b 	; skip if vertex offscreen
+	tst a,0101b 	; skip if vertex below or to the right offscreen 
 	jq nz,skipSprite 
 findWidth:
-; compute width and height
+	; compute width and height
 	or a,a 
 	sbc hl,hl 
 	ld l,(spriteDepth) 
 	add hl,hl 
 	ld de,_ZinvLUT
 	add hl,de 
-	ld e,(hl)
-	inc hl 
-	ld d,(hl) 
-	ex.sis de,hl
-	; size = 4*f/z
+	ld hl,(hl) 
+	; de = size = 4*f/z
+	xor a,a 
 	add hl,hl
-	add hl,hl
-	push hl 
-	inc sp 
-	pop hl 
-	dec sp 
+	add.sis hl,hl
+	rla 
+	ld l,h 
+	ld h,a 
 	ex de,hl 
+	
+	; skip sprite if y+size<0  
 	ld hl,(spriteY) 
-	add.sis hl,de 
-	xor a,a
-	cp a,h 
-	ld a,b 
-	jr z,$+4 
-	or a,1
+	add hl,de 
+	rl h 
+	jq c,skipSprite
+	ld a,5	; transparent shader
 	ld hl,-17 ;if size > 16  
 	add hl,de 
 	jr c,$+4 
 	add a,2 
-	add a,4 
 	ld (tshader),a 
 ; set face entry 
 	ld (tbx),de 
@@ -223,8 +216,8 @@ objectloop:
 	ld iy,(iy)
 	call _projectVertices
 cacheFaces: 
-	ld de,(iy+11) ;face count
-	ld iy,(iy+16) ; face pointer 
+	ld de,(iy+8) ;face count
+	ld iy,(iy+13) ; face pointer 
 	ld ix,$E10010
 	ld hl,1 
 	ex.sis hl,de
@@ -289,49 +282,22 @@ faceloop:
 	jr Z,$+3
 	inc b 
 	
-	; swap iy 
+	; copy light,u0 & v0,x0 & y0 
 	ld hl,(light)
 	ld (facePointer),iy 
 	ld iy,(cachePointer)
 	
-	ld (tshader),b 
-	; copy light,u0 & v0,x0 & y0 
 	ld (tlight),hl 
+	ld (tshader),b 
 	
-	; by = y3 - y0 
-	ld hl,(y3) 
-	ld de,(y0) 
-	or a,a 
-	sbc hl,de 
-	ld (tby),hl 
-	
-	; cy = y1 - y0 
-	ld hl,(y1) 
-	or a,a 
-	sbc hl,de 
-	ld (tcy),hl 
-	
-	;bx = x3 - x0 
-	ld hl,(x3) 
+	; area = (x2-x0)*(y1-y3) + (y2-y0)*(x3-x1)
+	ld hl,(x2) 
 	ld de,(x0) 
 	or a,a 
 	sbc hl,de 
-	ld (tbx),l
-	ld (tbx+1),h
-	
-	;cx = x1 - x0 
-	ld hl,(x1) 
-	or a,a 
-	sbc hl,de 
-	ld (tcx),hl
-			
-	; area = (x2-x0)*(cy-by) + (y2-y0)*(bx-cx)
-	ld hl,(x2) 
-	or a,a 
-	sbc hl,de 
 	ex de,hl
-	ld hl,(tcy) 
-	ld bc,(tby) 
+	ld hl,(y1) 
+	ld bc,(y3) 
 	or a,a 
 	sbc hl,bc
 	;hl*de 
@@ -354,8 +320,8 @@ faceloop:
 	or a,a 
 	sbc hl,de 
 	ex de,hl
-	ld hl,(tbx) 
-	ld bc,(tcx) 
+	ld hl,(x3) 
+	ld bc,(x1) 
 	or a,a 
 	sbc hl,bc
 	;hl*de 
@@ -382,26 +348,52 @@ faceloop:
 	jq c,$+6 
 	set 1,(tshader)
 	
+	
+	; cy = y1 - y0 
+	ld hl,(y1) 
+	ld b,h 
+	ld c,l 
+	ld de,(y0)
+	or a,a 
+	sbc hl,de 
+	ld (tcy),hl 
+	; by = y3 - y0 
+	ld hl,(y3) 
+	or a,a 
+	sbc hl,de 
+	ld (tby),hl 
 	; ay = y0 - y1 - y3 + y2 = y2 - by - y1 
+	ex de,hl 
 	ld hl,(y2) 
-	ld de,(tby)
 	or a,a 
 	sbc hl,de 
-	ld de,(y1) 
 	or a,a 
-	sbc hl,de 
+	sbc hl,bc 
 	ld (tay),hl
 	
+	;cx = x1 - x0 
+	ld hl,(x1) 
+	ld b,h 
+	ld c,l 
+	ld de,(x0)
+	or a,a 
+	sbc hl,de 
+	ld (tcx),hl 
+	;bx = x3 - x0 
+	ld hl,(x3) 
+	or a,a 
+	sbc hl,de 
+	ld (tbx),l 
+	ld (tbx+1),h 
 	; ax = x0 - x1 - x3 + x2 = x2 - bx - x1 
+	ex de,hl 
 	ld hl,(x2) 
-	ld de,(tbx)
 	or a,a 
 	sbc hl,de 
-	ld de,(x1) 
 	or a,a 
-	sbc hl,de 
-	ld (tax),l 
-	ld (tax+1),h
+	sbc hl,bc 
+	ld (tax),l
+	ld (tax+1),h 
 	
 	; find sum of distances (8.2 average)  
 	or a,a 
@@ -417,6 +409,11 @@ faceloop:
 	ld e,(depth3) 
 	add hl,de 
 	dec hl	
+	
+	ld a,(x0)
+	ld (tx0),a
+	ld a,(y0) 
+	ld (ty0),a
 
 	; update min and max buckets 
 	ex de,hl
@@ -444,11 +441,7 @@ faceloop:
 	inc de 	
 	ld (numFaces),de
 	
-	ld a,(x0)
-	ld (tx0),a
-	ld a,(y0) 
-	ld (ty0),a
-	
+	;next face cache entry
 	lea iy,iy+20 
 	ld (cachePointer),iy 
 loadFacePointer: 
@@ -464,9 +457,7 @@ StoreSP:=$-3
 	pop iy 
 	dec b 
 	jq nz,objectloop
-	jp _renderFaces
 	
-virtual at $E30B00
 ; iterates through face buckets and renders faces
 _renderFaces: 
 	ld a,$FF 
@@ -528,12 +519,6 @@ return:
 	pop ix 
 	ret 
 	
-assert $<$E30B80
-load _renderFaces_data: $-$$ from $$
-_renderFaces_len := $-$$
-end virtual
-_renderFaces_src:
-	db _renderFaces_data
 	
 
 	

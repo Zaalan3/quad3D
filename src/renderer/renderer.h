@@ -20,17 +20,17 @@ extern translation_matrix_t cameraMatrix;
 
 // active object list
 extern uint8_t numObjects;
-extern object_t* activeObject[255];
+extern object_t* activeObject[64];
 
 extern uint8_t numSprites; 
-extern billboard_t activeSprite[255];
+extern billboard_t activeSprite[64];
 
 // processed vertices
 // 8 kb
 extern struct vertex_cached vertexCache[1024]; 
 
 // visible faces cache
-// 22 kb on heap
+// 20 kb on heap
 extern struct face_cached faceCache[1024]; 
 
 // face bucket linked list

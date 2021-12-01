@@ -8,10 +8,10 @@
 
 // active object list
 uint8_t numObjects;
-object_t* activeObject[255];
+object_t* activeObject[64];
 
 uint8_t numSprites; 
-billboard_t activeSprite[255];
+billboard_t activeSprite[64];
 
 // visible faces cache
 struct face_cached faceCache[1024]; 

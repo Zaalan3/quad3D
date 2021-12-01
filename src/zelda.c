@@ -4,7 +4,7 @@
 static face_t faces[349];
 static vertex_t verts[824];
 
-object_t zelda = {0,0,0,0,0,0,824,349,verts,faces};
+object_t zelda = {0,0,0,824,349,verts,faces};
 static face_t faces[349] = { 
 	{0,0,0,0,11,13,12,10},
 	{0,0,0,0,15,17,16,14},

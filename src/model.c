@@ -21,4 +21,4 @@ face_t squareFaces[6] = {
 };
 
 
-object_t squareModel = {80,0,80,0,0,0,8,6,squareVerts,squareFaces}; 
+object_t squareModel = {80,0,80,8,6,squareVerts,squareFaces}; 

@@ -2,10 +2,10 @@
 
 #include "renderer/renderer.h"
 
-vertex_t verts[45];
-static face_t faces[32];
-object_t grid = {0,0,0,45,32,verts,faces};
-static face_t faces[32] = { 
+static qdVertex verts[45];
+static qdFace faces[32];
+qdObject grid = {0,0,0,45,32,verts,faces};
+static qdFace faces[32] = { 
 	{SHADER_TEXTURED,255,0,0,0,1,10,9},
 	{SHADER_TEXTURED,255,0,0,1,2,11,10},
 	{SHADER_TEXTURED,255,0,0,2,3,12,11},
@@ -39,7 +39,7 @@ static face_t faces[32] = {
 	{SHADER_TEXTURED,255,0,0,33,34,43,42},
 	{SHADER_TEXTURED,255,0,0,34,35,44,43}
 };
-vertex_t verts[45] = { 
+static qdVertex verts[45] = { 
 	{-32,0,0},
 	{-24,0,0},
 	{-16,0,0},

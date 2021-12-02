@@ -1,5 +1,5 @@
-public _initRenderer
-public _closeRenderer
+public _qdInit
+public _qdClose
 
 extern _gfx_Begin 
 extern _gfx_ZeroScreen 
@@ -11,8 +11,8 @@ extern port_setup
 extern port_privilege_unlock
 extern port_privilege_lock
 
-extern _numObjects
-extern _numSprites
+extern _qdNumObjects
+extern _qdNumSprites
 
 extern _bilerpShader
 extern _bilerp_len
@@ -22,7 +22,7 @@ extern _matrixRoutine
 extern _matrixroutine_src
 extern _matrixroutine_len
 
-_initRenderer: 
+_qdInit: 
 	; initialize screen 
 	; sets screen buffer to $D52C00. $D40000 reserved for canvas and texture page( so no double buffering ) 
 	call	_gfx_Begin
@@ -56,12 +56,12 @@ _initRenderer:
 	
 	; reset global variables
 	xor a,a
-	ld (_numObjects),a
-	ld (_numSprites),a
+	ld (_qdNumObjects),a
+	ld (_qdNumSprites),a
 	
 	ret 
 	
-_closeRenderer:
+_qdClose:
 	push ix 
 	call port_privilege_lock 
 	pop ix 

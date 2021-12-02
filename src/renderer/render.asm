@@ -1,17 +1,16 @@
-public _renderObjects
+public _qdRender
 
 
-extern _activeSprite
-extern _numSprites
-extern _activeObject
-extern _numObjects
+extern _qdActiveSprite
+extern _qdNumSprites
+extern _qdActiveObject
+extern _qdNumObjects
 extern _projectVertices
 extern _projectSprites
-extern _vertexCache
-extern _faceBucket
-extern _faceCache
+extern _qdVertexCache
+extern _qdFaceBucket
+extern _qdFaceCache
 extern _callShader
-extern _clearCanvas
 extern _setCameraPosition
 extern _currentShader
 
@@ -71,12 +70,12 @@ tcy equ iy+14
 tcx equ iy+16
 tnext equ iy+18
 
-_renderObjects: 
+_qdRender: 
 	push ix
 	ld ix,$E10010
 	; init face buckets 
-	ld hl,_faceBucket
-	ld de,_faceBucket+1 
+	ld hl,_qdFaceBucket
+	ld de,_qdFaceBucket+1 
 	ld (hl),$FF 
 	ld bc,2047 
 	ldir 
@@ -85,7 +84,7 @@ _renderObjects:
 	ld (bucketMax),bc 
 	ld bc,1024
 	ld (bucketMin),bc 
-	ld bc,_faceCache 
+	ld bc,_qdFaceCache 
 	ld (cachePointer),bc
 	
 	; load camera matrix
@@ -93,11 +92,11 @@ _renderObjects:
 	
 ; process sprites 
 processSprites:
-	ld a,(_numSprites) 
+	ld a,(_qdNumSprites) 
 	or a,a 
 	jq Z,processObjects 
 	ld b,a 
-	ld iy,_vertexCache	
+	ld iy,_qdVertexCache	
 	call _projectSprites
 	ld ix,$E10010
 	ld (facePointer),iy 
@@ -178,7 +177,7 @@ findWidth:
 	jr c,$+5 
 	ld (bucketMin),de 
 	; update this face's bucket
-	ld hl,_faceBucket
+	ld hl,_qdFaceBucket
 	add hl,de
 	add hl,de
 	ld de,(hl) 
@@ -202,11 +201,11 @@ skipSprite:
 ;----------------------------------------
 ; process 3D objects 
 processObjects:
-	ld a,(_numObjects)
+	ld a,(_qdNumObjects)
 	or a,a 
 	jq Z,return
 	ld b,a
-	ld iy,_activeObject 
+	ld iy,_qdActiveObject 
 	
 	ld hl,-3 
 	add hl,sp 
@@ -228,7 +227,7 @@ faceloop:
 	add hl,hl
 	add hl,hl 
 	add.sis hl,hl
-	ld sp,_vertexCache
+	ld sp,_qdVertexCache
 	add hl,sp 
 	lea de,x0 
 	ld bc,6 
@@ -429,7 +428,7 @@ faceloop:
 	jr c,$+5 
 	ld (bucketMin),de 
 	; update this face's bucket
-	ld hl,_faceBucket
+	ld hl,_qdFaceBucket
 	add hl,de
 	add hl,de
 	ld bc,(hl) 
@@ -470,7 +469,7 @@ _renderFaces:
 	push hl 
 	add hl,de 
 	ex de,hl
-	ld ix,_faceBucket
+	ld ix,_qdFaceBucket
 	add ix,de 
 	add ix,de
 	
@@ -492,7 +491,7 @@ bucketloop:
 	add hl,de
 	ex.sis de,hl	; clears uDE
 	
-	ld iy,_faceCache
+	ld iy,_qdFaceCache
 	add iy,de 
 	ld de,(iy+18) 
 	push de 

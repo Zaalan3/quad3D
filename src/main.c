@@ -15,12 +15,10 @@
 #include "renderer/renderer.h" 
 #include "gfx/gfx.h"
 
-extern object_t squareModel;
-extern object_t monkey;
-extern object_t zelda;
-extern object_t grid;
-
-extern vertex_t verts[45];
+extern qdObject squareModel;
+extern qdObject monkey;
+extern qdObject zelda;
+extern qdObject grid;
 
 #define startTimer() timer_1_Counter = 0; \
 					timer_Control = TIMER1_ENABLE|TIMER1_CPU|TIMER1_UP;
@@ -32,18 +30,18 @@ int main(void)
 	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	billboard_t spr = {0,20,0,16,0}; 
+	qdSprite spr = {0,20,0,16,0}; 
 	
-	vertex_t pos = {0,5,40};
+	qdVertex pos = {0,5,40};
 	
-    initRenderer();
+    qdInit();
 	loadTextureMapCompressed(tileset_compressed);
 
-	activeObject[0] = &grid;
-	numObjects = 1;
+	qdActiveObject[0] = &grid;
+	qdNumObjects = 1;
 	gfx_SetPalette(global_palette,32,0); 
-	activeSprite[0] = spr;
-	numSprites = 1;
+	qdActiveSprite[0] = spr;
+	qdNumSprites = 1;
 	
 	gfx_SetColor(0xFF); 
 	
@@ -57,7 +55,7 @@ int main(void)
 	gfx_SetColor(0xFF);
 	
 	
-	setCameraAngle(ax,ay,az);
+	qdSetCameraAngle(ax,ay,az);
 	kb_Scan();
 	while(!kb_IsDown(kb_KeyClear)) { 
 			
@@ -81,24 +79,24 @@ int main(void)
 		
 		if(kb_IsDown(kb_Key5)) { 
 		// TODO: figure out switch statements for non integers 
-			if(activeObject[0] == &grid)
-				activeObject[0] = &zelda;
-			else if(activeObject[0] == &zelda)
-				activeObject[0] = &monkey;
+			if(qdActiveObject[0] == &grid)
+				qdActiveObject[0] = &zelda;
+			else if(qdActiveObject[0] == &zelda)
+				qdActiveObject[0] = &monkey;
 			else 
-				activeObject[0] = &grid; 
+				qdActiveObject[0] = &grid; 
 		} 
 		
-		cameraMatrix.x = pos.x;
-		cameraMatrix.y = pos.y;
-		cameraMatrix.z = pos.z;
+		qdCameraMatrix.x = pos.x;
+		qdCameraMatrix.y = pos.y;
+		qdCameraMatrix.z = pos.z;
 		
-		clearCanvas();
+		qdClearCanvas();
 		startTimer(); 
-		renderObjects(); 
+		qdRender(); 
 		stopTimer();
 		gfx_Wait();
-		blitCanvas();
+		qdBlitCanvas();
 		
 		gfx_SetTextXY(0,0);
 		gfx_PrintUInt(getTimer(),6);
@@ -106,5 +104,5 @@ int main(void)
 		kb_Scan(); 
 	} 
 		
-	closeRenderer();
+	qdClose();
 }

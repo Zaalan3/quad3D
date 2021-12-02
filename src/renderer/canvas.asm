@@ -1,9 +1,9 @@
 
-public _blitCanvas
-public _clearCanvas
+public _qdBlitCanvas
+public _qdClearCanvas
 
-public _vertexCache 
-public _faceBucket
+public _qdVertexCache 
+public _qdFaceBucket
 
 public canvas
 public canvas_width
@@ -16,10 +16,10 @@ canvas_offset:=48
 
 screen:=$D52C00 
 
-_faceBucket:=$D52000
-_vertexCache:=$D50000
+_qdFaceBucket:=$D52000
+_qdVertexCache:=$D50000
 
-_clearCanvas: 
+_qdClearCanvas: 
 	ld iy,0 
 	add iy,sp 
 	ld hl,canvas+canvas_width+canvas_offset
@@ -35,7 +35,7 @@ end repeat
 	ld sp,iy
 	ret 
 	
-_blitCanvas:
+_qdBlitCanvas:
 	ld hl,canvas+canvas_offset
 	exx 
 	ld hl,screen + 60*320 + 80 

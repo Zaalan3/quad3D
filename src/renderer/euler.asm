@@ -1,4 +1,4 @@
-public _eulerToMatrix 
+public _qdEulerToMatrix 
 
 extern _fixedSin
 extern _fixedHLmulBC 
@@ -30,7 +30,7 @@ y equ iy+20
 z equ iy+22
 
 
-_eulerToMatrix:
+_qdEulerToMatrix:
 	ld hl,-18
 	call __frameset 
 	ld iy,(matrix) 

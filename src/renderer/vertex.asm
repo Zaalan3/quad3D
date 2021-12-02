@@ -1,4 +1,4 @@
-public _transformVertices
+public _qdTransformVertices
 public _projectVertices
 public _projectSprites
 public _setCameraPosition
@@ -16,15 +16,15 @@ public _ZinvLUT
 extern canvas_width
 extern canvas_height
 
-extern _vertexCache
-extern _cameraMatrix 
+extern _qdVertexCache
+extern _qdCameraMatrix 
 
 extern _getReciprocal 
 extern _MultiplyHLBC
 extern _recipTable
 
-extern _activeSprite
-extern _numSprites
+extern _qdActiveSprite
+extern _qdNumSprites
 
 m00 equ iy+0 
 m01 equ iy+2
@@ -140,7 +140,7 @@ _loadMatrix:
 ;---------------------------------------------------------	
 _setCameraPosition: 
 	push ix 
-	ld iy,_cameraMatrix
+	ld iy,_qdCameraMatrix
 	call _loadMatrix
 	lea ix,cx	; offset of camera position
 	or a,a 
@@ -180,7 +180,7 @@ _setCameraPosition:
 
 	
 ;---------------------------------------------------------
-_transformVertices: 
+_qdTransformVertices: 
 	push ix 
 	ld ix,6 
 	add ix,sp 
@@ -220,6 +220,7 @@ loop:
 	pop ix
 	ret 
 
+;---------------------------------------------------------
 ; projects sprite vertices
 _projectSprites: 
 	push iy 
@@ -227,11 +228,11 @@ _projectSprites:
 	ld a,8
 	ld (SMCSizeVertex),a ; billboard size different then regular vertex
 	
-	ld ix,_activeSprite 	
-	ld iy,_vertexCache
+	ld ix,_qdActiveSprite 	
+	ld iy,_qdVertexCache
 	or a,a 
 	sbc hl,hl 
-	ld a,(_numSprites)
+	ld a,(_qdNumSprites)
 	ld l,a
 	ld de,1
 	jp projloop
@@ -243,7 +244,7 @@ _projectVertices:
 	ld a,6 
 	ld (SMCSizeVertex),a
 	lea ix,iy+0
-	ld iy,_cameraMatrix
+	ld iy,_qdCameraMatrix
 	or a,a 
 	sbc hl,hl
 	ld (SMCLoadX),hl
@@ -265,7 +266,7 @@ _projectVertices:
 	ld de,(ix+6)  ; de = vertex count
 	ld ix,(ix+10) ; ix = vertex pointer
 	
-	ld iy,_vertexCache 
+	ld iy,_qdVertexCache 
 	ex.sis de,hl 
 	ld de,1
 	jp projloop

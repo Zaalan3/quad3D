@@ -1,6 +1,6 @@
 #include "renderer/renderer.h" 
 
-vertex_t squareVerts[8] = { 
+qdVertex squareVerts[8] = { 
 	{4,4,-4},
 	{4,-4,-4},
 	{4,4,4},
@@ -11,7 +11,7 @@ vertex_t squareVerts[8] = {
 	{-4,-4,4},
 }; 
 
-face_t squareFaces[6] = { 
+qdFace squareFaces[6] = { 
 	{0,0,16,0,0,4,6,2},
 	{0,0,16,0,3,2,6,7},
 	{0,0,16,0,7,6,4,5},
@@ -21,4 +21,4 @@ face_t squareFaces[6] = {
 };
 
 
-object_t squareModel = {80,0,80,8,6,squareVerts,squareFaces}; 
+qdObject squareModel = {80,0,80,8,6,squareVerts,squareFaces}; 

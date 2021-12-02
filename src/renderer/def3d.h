@@ -8,7 +8,7 @@ typedef struct {
 	int16_t x; 
 	int16_t y; 
 	int16_t z;
-} vertex_t; 
+} qdVertex; 
 
 enum shader_type { 
 	SHADER_TEXTURED = 0,
@@ -22,7 +22,7 @@ typedef struct {
 	uint8_t light; // light level + palette
 	uint8_t u0,v0; // UV coords 
 	uint16_t vt0,vt1,vt2,vt3; 	// vertices of face
-} face_t; 
+} qdFace; 
 
 // 16 bytes
 typedef struct { 
@@ -31,9 +31,9 @@ typedef struct {
 	int16_t z;
 	uint16_t vertnum;
 	uint16_t facenum; 
-	vertex_t* vertex;
-	face_t* face;
-} object_t; 
+	qdVertex* vertex;
+	qdFace* face;
+} qdObject; 
 
 // for easy defines
 #define packNibble(x,y) (16*y + x)
@@ -41,7 +41,7 @@ typedef struct {
 typedef struct { 
 	int16_t x,y,z; 
 	uint8_t u,v; 
-} billboard_t; 
+} qdSprite; 
 
 #define LEFT 0b00001000
 #define RIGHT 0b00000100
@@ -50,7 +50,7 @@ typedef struct {
 #define OOB 0xFF
 
 // 8 bytes 
-struct vertex_cached { 
+struct qd_vertex_cached { 
 	int16_t xs,ys; // screen position
 	uint8_t depth; // z 
 	uint8_t outcode; // clipping outcode  
@@ -59,7 +59,7 @@ struct vertex_cached {
 
 
 // 20 bytes
-struct face_cached {  
+struct qd_face_cached {  
 	uint8_t shader; 
 	uint8_t light;
 	uint8_t u0,v0;	

@@ -16,44 +16,47 @@
 #define loadTextureMapCompressed(ptr) zx7_Decompress((void *)0xD48000,(void *)ptr)
 
 // camera matrix
-extern translation_matrix_t cameraMatrix; 
+extern qdMatrix qdCameraMatrix; 
 
 // active object list
-extern uint8_t numObjects;
-extern object_t* activeObject[64];
+extern uint8_t qdNumObjects;
+extern qdObject* qdActiveObject[64];
 
-extern uint8_t numSprites; 
-extern billboard_t activeSprite[64];
+extern uint8_t qdNumSprites; 
+extern qdSprite qdActiveSprite[64];
 
-// processed vertices
+// processed vertices, reset for each object.
 // 8 kb
-extern struct vertex_cached vertexCache[1024]; 
+extern struct qd_vertex_cached qdVertexCache[1024]; 
 
 // visible faces cache
 // 20 kb on heap
-extern struct face_cached faceCache[1024]; 
+extern struct qd_face_cached qdFaceCache[1024]; 
 
-// face bucket linked list
-// stores first face for each distance
+// face bucket linked lists
+// stores indices for the first face at each distance
 // 2 kb 
-extern uint16_t faceBucket[1024];
+extern uint16_t qdFaceBucket[1024];
 
-// initializes renderer
-void initRenderer(void); 
+// initializes renderer 
+void qdInit(void); 
 
 // resets renderer
-void closeRenderer(void);
+void qdClose(void);
 
 // blits the Canvas to the Screen. 
-void blitCanvas(void); 
+void qdBlitCanvas(void); 
 
 // clears the canvas
-void clearCanvas(void); 
+void qdClearCanvas(void); 
 
 // renders objects and sprites to canvas.
-void renderObjects(void);
+void qdRender(void);
 
-#define setCameraAngle(ax,ay,az) eulerToMatrix(&cameraMatrix,ax,ay,az) 
+#define qdSetCameraAngle(ax,ay,az) qdEulerToMatrix(&qdCameraMatrix,ax,ay,az) 
 
+#define qdSetCameraPosition(a,b,c) qdCameraMatrix.x = a; \
+								qdCameraMatrix.y = b; \
+								qdCameraMatrix.z = c;
 
 #endif

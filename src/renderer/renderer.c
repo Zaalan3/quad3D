@@ -7,15 +7,15 @@
 // ~24 kb off heap 
 
 // active object list
-uint8_t numObjects;
-object_t* activeObject[64];
+uint8_t qdNumObjects;
+qdObject* qdActiveObject[64];
 
-uint8_t numSprites; 
-billboard_t activeSprite[64];
+uint8_t qdNumSprites; 
+qdSprite qdActiveSprite[64];
 
 // visible faces cache
-struct face_cached faceCache[1024]; 
+struct qd_face_cached qdFaceCache[1024]; 
 
 // camera matrix
-translation_matrix_t cameraMatrix;
+qdMatrix qdCameraMatrix;
 

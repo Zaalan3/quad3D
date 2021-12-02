@@ -2,11 +2,11 @@
 
 #include "renderer/renderer.h"
 
-static face_t faces[499];
-static vertex_t verts[507];
+static qdFace faces[499];
+static qdVertex verts[507];
 
-object_t monkey = {0,0,0,507,499,verts,faces};
-static face_t faces[499] = { 
+qdObject monkey = {0,0,0,507,499,verts,faces};
+static qdFace faces[499] = { 
 	{0,0,0,0,46,0,2,44},
 	{0,0,0,0,3,1,47,45},
 	{0,0,0,0,44,2,4,42},
@@ -507,7 +507,7 @@ static face_t faces[499] = {
 	{0,0,0,0,504,322,320,390},
 	{0,0,0,0,73,284,72,283}
 };
-static vertex_t verts[507] = { 
+static qdVertex verts[507] = { 
 	{7,3,12},
 	{-7,3,12},
 	{8,1,11},

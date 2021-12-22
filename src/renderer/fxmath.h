@@ -14,10 +14,5 @@ int fxSin(uint8_t angle);
 
 #define fxCos(a) fxSin(a+64)  
 
-// returns 0.16 reciprocal of an unsigned number
-int fxGetRecip(int x); 
-
-// multiplies signed 16 bit i with unsigned reciprocal
-int fxMulRecip(int i,int recip);
 
 #endif

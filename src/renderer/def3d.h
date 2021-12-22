@@ -12,8 +12,7 @@ typedef struct {
 
 enum shader_type { 
 	SHADER_TEXTURED = 0,
-	SHADER_TRANSPARENT = 4, 
-	SHADER_FLAT = 8
+	SHADER_FLAT = 4
 }; 
 
 // 12 bytes 

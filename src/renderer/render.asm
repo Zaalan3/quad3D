@@ -137,7 +137,7 @@ findWidth:
 	add hl,de 
 	rl h 
 	jq c,skipSprite
-	ld a,5	; transparent shader
+	xor a,a	; textured shader
 	ld hl,-17 ;if size > 16  
 	add hl,de 
 	jr c,$+4 

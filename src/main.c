@@ -40,8 +40,8 @@ int main(void)
 	qdActiveObject[0] = &grid;
 	qdNumObjects = 1;
 	gfx_SetPalette(global_palette,32,0); 
-	qdActiveSprite[0] = spr;
-	qdNumSprites = 1;
+	/* qdActiveSprite[0] = spr;
+	qdNumSprites = 1; */
 	
 	gfx_SetColor(0xFF); 
 	
@@ -55,13 +55,14 @@ int main(void)
 	gfx_SetColor(0xFF);
 	
 	
-	qdSetCameraAngle(ax,ay,az);
+	
 	kb_Scan();
 	while(!kb_IsDown(kb_KeyClear)) { 
-			
-		if(kb_IsDown(kb_KeyLeft)) { 
+		qdSetCameraAngle(ax,ay,az);
+		
+		if(kb_IsDown(kb_Key4)) { 
 			pos.x--; 
-		} else if(kb_IsDown(kb_KeyRight)) { 
+		} else if(kb_IsDown(kb_Key6)) { 
 			pos.x++; 
 		} 
 		
@@ -76,6 +77,12 @@ int main(void)
 		} else if(kb_IsDown(kb_Key2)) { 
 			pos.z++; 
 		}
+		
+		if(kb_IsDown(kb_KeyLeft)) { 
+			ay+=3; 
+		} else if(kb_IsDown(kb_KeyRight)) { 
+			ay-=3; 
+		} 
 		
 		if(kb_IsDown(kb_Key5)) { 
 		// TODO: figure out switch statements for non integers 
@@ -99,7 +106,13 @@ int main(void)
 		qdBlitCanvas();
 		
 		gfx_SetTextXY(0,0);
-		gfx_PrintUInt(getTimer(),6);
+		gfx_PrintUInt(getTimer(),8);
+		gfx_PrintChar(' '); 
+		gfx_PrintUInt(ax,3);
+		gfx_PrintChar(' '); 
+		gfx_PrintUInt(ay,3);
+		gfx_PrintChar(' '); 
+		gfx_PrintUInt(az,3);
 
 		kb_Scan(); 
 	} 

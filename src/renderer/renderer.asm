@@ -14,13 +14,13 @@ extern port_privilege_lock
 extern _qdNumObjects
 extern _qdNumSprites
 
-extern _bilerpShader
-extern _bilerp_len
-extern _bilerp_src
+extern _shaderRoutine
+extern _shaderRoutine_len
+extern _shaderRoutine_src
 
 extern _matrixRoutine
-extern _matrixroutine_src
-extern _matrixroutine_len
+extern _matrixRoutine_src
+extern _matrixRoutine_len
 
 _qdInit: 
 	; initialize screen 
@@ -44,14 +44,14 @@ _qdInit:
 	pop ix 
 	
 	; load routines into fastRam 
-	ld de,_bilerpShader
-	ld hl,_bilerp_src
-	ld bc,_bilerp_len 
+	ld de,_shaderRoutine
+	ld hl,_shaderRoutine_src
+	ld bc,_shaderRoutine_len 
 	ldir 
 	
 	ld de,_matrixRoutine
-	ld hl,_matrixroutine_src
-	ld bc,_matrixroutine_len 
+	ld hl,_matrixRoutine_src
+	ld bc,_matrixRoutine_len 
 	ldir 
 	
 	; reset global variables

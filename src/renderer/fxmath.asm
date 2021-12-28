@@ -166,38 +166,29 @@ _fxMul:
 	push hl
 	push de
 _fixedHLmulBC:
-	ex de,hl
-	ld h,e 
-	ld l,c 
-	mlt hl 
-	ld a,h 
+	ex de,hl 
 	ld h,d 
 	ld l,b 
-	mlt hl  
+	mlt hl 
+	ld a,h 
+	bit 7,d 
+	jr Z,$+3 
+	sub a,c
 	bit 7,b 
-	jr Z,$+5
-	or a,a 
-	sbc hl,de 
-	bit 7,d
-	jr Z,$+5 
-	or a,a 
-	sbc hl,bc 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ld l,a 
+	jr Z,$+3 
+	sub a,e 
+	ld h,e 
+	ld l,c 
+	mlt hl
+	ld l,h  
+	ld h,a 
 	ld a,b 
-	ld b,d 
+	ld b,d  
 	ld d,a 
 	mlt de 
 	mlt bc 
 	add hl,de 
-	add hl,bc 
+	add hl,bc
 	ret 
 
 

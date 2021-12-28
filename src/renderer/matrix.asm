@@ -11,9 +11,9 @@ public _matrixRow0Multiply
 public _matrixRow1Multiply
 public _matrixRow2Multiply
 
-
 extern canvas_width
 extern canvas_height
+extern canvas_offset
 
 extern _qdVertexCache
 extern _qdCameraMatrix 
@@ -280,19 +280,14 @@ projloop:
 	exx 
 	call _matrixRow2Multiply
 	ld (depth),l 
-	
-	ld a,h 
-	or a,a 
-	jr Z,$+10 ; skip if z out of range
+	 
+	bit 7,l 
+	jq Z,skipEarlyZ
+earlyZ:
 	ld (outcode),$FF ; out of range 
 	jq skipVert
-	
-	ld a,l 
-	or a,a ; skip if zero
-	jr nz,$+10 
-	ld (outcode),$FF ; out of range 
-	jq skipVert
-	
+skipEarlyZ: 	
+	add hl,de
 	dec l 
 	add hl,hl  
 	ld de,_ZinvLUT
@@ -300,54 +295,6 @@ projloop:
 	ld hl,(hl) 
 	push hl
 	push hl
-	
-	call _matrixRow0Multiply
-	; 256/2 + x'*f/z'
-	;de*bc
-	ex de,hl
-	pop bc 
-	ld h,e 
-	ld l,c 
-	mlt hl 
-	ld a,h 
-	ld h,d 
-	ld l,b 
-	mlt hl  
-	bit 7,d 
-	jr Z,$+5
-	or a,a 
-	sbc hl,bc 
-	ld h,l
-	ld l,a 
-	ld a,b 
-	ld b,d 
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc
-	ex de,hl
-	ld hl,256/2
-	add hl,de
-	ld (xs),hl
-	
-	xor a,a 
-	cp a,h 
-	jr Z,$+9
-	ld (outcode),$FF 
-	pop bc 
-	jr skipVert
-	; left outcode 
-	ld h,a 
-	ld a,l
-	cp a,48
-	rl h	; set if x less than 
-	; right outcode 
-	cp a,canvas_width+48
-	ccf 
-	ld a,h  
-	rla
-	ex af,af' 
 	
 	; height/2 - y'*f/z'
 	call _matrixRow1Multiply 
@@ -381,20 +328,78 @@ projloop:
 	ld (ys),l 
 	ld (ys+1),h 
 	
-	;top outcode 
-	ex af,af' 
-	ld b,h 
-	rl b 
-	rla 
-	;bottom outcode 
-	ld de,canvas_height
-	or a,a 
-	sbc hl,de 
-	add.sis hl,hl
+	;offset y value for easier bounds checking
+	ld de,canvas_offset
+	add hl,de 
+	; out of bounds = y<0 or y>255 
+	xor a,a 
+	cp a,h 
+	jr Z,topY
+	pop bc 
+	ld (outcode),$FF 
+	jr skipVert
+	; top outcode  
+topY: 
+	ld h,a 
+	ld a,l
+	cp a,canvas_offset 
+	rl h	; set if x less than canvas offset 
+	; bottom outcode 
+	cp a,canvas_height+canvas_offset
 	ccf 
-	rla 
+	ld a,h  
+	rla
+	ex af,af'
 	
-	ld (outcode),a 
+	call _matrixRow0Multiply
+	; 256/2 + x'*f/z'
+	;de*bc
+	ex de,hl
+	pop bc 
+	ld h,e 
+	ld l,c 
+	mlt hl 
+	ld a,h 
+	ld h,d 
+	ld l,b 
+	mlt hl  
+	bit 7,d 
+	jr Z,$+5
+	or a,a 
+	sbc hl,bc 
+	ld h,l
+	ld l,a 
+	ld a,b 
+	ld b,d 
+	ld d,a 
+	mlt de 
+	mlt bc 
+	add hl,de 
+	add hl,bc
+	ld de,256/2
+	add hl,de
+	ld (xs),l
+	ld (xs+1),h
+	
+	; out of bounds = x<0 or x>255 
+	xor a,a 
+	cp a,h 
+	jr Z,leftX
+	ld (outcode),$FF 
+	jr skipVert
+	; left outcode 
+leftX:
+	ex af,af'	
+	ld h,a 
+	ld a,l
+	cp a,canvas_offset
+	rl h	; set if x less than 
+	; right outcode 
+	cp a,canvas_width+canvas_offset
+	ccf  
+	rl h 
+	
+	ld (outcode),h  
 	; copy UV for sprites
 	ld hl,(ix+6) 
 	ld (iy+6),hl

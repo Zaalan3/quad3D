@@ -32,7 +32,7 @@ int main(void)
 	uint8_t az = 0;
 	qdSprite spr = {0,20,0,16,0}; 
 	
-	qdVertex pos = {0,5,40};
+	qdVertex pos = {0,1,40};
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);

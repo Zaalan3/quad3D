@@ -16,32 +16,34 @@ repeat 4
 	exx 
 	ld d,a 
 	ld e,h 
-	ld a,iyl 
+	ld a,i
 	ld (de),a 
 	add hl,sp 
 	exx 
 	add hl,de 
 end repeat 
 	djnz bilerp16_flat
+	ld b,4
 	jp shaderVloop
 	endShader bilerp16_flat
 
 ;-----------------------------------
 bilerp16_flat_clipped: 
-repeat 4 
+repeat 4  
 	ld a,h 
 	exx 
 	ld d,a 
 	cp a,canvas_height 
 	jr nc,$+6 
 	ld e,h 
-	ld a,iyl 
+	ld a,i 
 	ld (de),a 
 	add hl,sp 
 	exx 
 	add hl,de 
-end repeat 
+end repeat  
 	djnz bilerp16_flat_clipped
+	ld b,4
 	jp shaderVloop
 	endShader bilerp16_flat_clipped
 
@@ -53,7 +55,7 @@ repeat 2
 	exx 
 	ld d,a 
 	ld e,h 
-	ld a,iyl 
+	ld a,i 
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -66,6 +68,7 @@ repeat 2
 	add hl,de
 end repeat
 	djnz bilerp32_flat
+	ld b,8
 	jp shaderVloop 
 	endShader bilerp32_flat
 
@@ -78,7 +81,7 @@ repeat 2
 	jr nc,$+13
 	ld d,a 
 	ld e,h 
-	ld a,iyl 
+	ld a,i 
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -91,6 +94,7 @@ repeat 2
 	add hl,de
 end repeat
 	djnz bilerp32_flat_clipped
+	ld b,8
 	jp shaderVloop 
 	endShader bilerp32_flat_clipped
 

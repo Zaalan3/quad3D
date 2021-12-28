@@ -42,10 +42,10 @@ typedef struct {
 	uint8_t u,v; 
 } qdSprite; 
 
-#define LEFT 0b00001000
-#define RIGHT 0b00000100
-#define TOP 0b00000010
-#define BOTTOM 0b00000001
+#define TOP 0b00001000
+#define BOTTOM 0b00000100
+#define LEFT 0b00000010
+#define RIGHT 0b00000001 
 #define OOB 0xFF
 
 // 8 bytes 

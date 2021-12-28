@@ -25,6 +25,7 @@ repeat 4
 	add hl,de 
 end repeat 
 	djnz bilerp16
+	ld b,4
 	jp shaderVloop
 	endShader bilerp16
 
@@ -45,6 +46,7 @@ repeat 4
 	add hl,de 
 end repeat
 	djnz bilerp16_clipped
+	ld b,4
 	jp shaderVloop
 	endShader bilerp16_clipped
 
@@ -69,6 +71,7 @@ repeat 2
 	add hl,de
 end repeat
 	djnz bilerp32
+	ld b,8
 	jp shaderVloop 
 endShader bilerp32
 
@@ -95,6 +98,7 @@ repeat 2
 	add hl,de 
 end repeat 
 	djnz bilerp32_clipped
+	ld b,8
 	jp shaderVloop 
 	endShader bilerp32_clipped
 

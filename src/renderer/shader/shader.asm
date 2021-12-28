@@ -43,6 +43,7 @@ cy equ iy+14
 cx equ iy+16
 next equ iy+18
 
+
 ;shader macro definitions 
 
 macro shaderEntry? shader,ppl 	; shader = shader name , ppl = pixels per loop
@@ -101,49 +102,53 @@ _currentShader:=$-1
 	add hl,de 
 	or a,a 
 	jr nz,loadShader  ; skip shader if already loaded 
-	ld bc,4 
-	add hl,bc 
-	ld a,(hl) 	; fetch length for shader again 
+	inc hl
+	inc hl
+	inc hl
+	inc hl
+	ld a,(hl) 	; fetch ppl for shader again 
 	jr cont 
 loadShader:
 	ld de,(hl) 
-	ld bc,3 
-	add hl,bc 
+	inc hl
+	inc hl
+	inc hl
+	ld bc,0
 	ld c,(hl) 
 	inc hl 
 	ld a,(hl) 
 	ex de,hl 
 	ld de,shaderUloop
 	ldir 	
+	
 cont:
 	; load variables and SMC bytes 
 	ld (SMCloadSP),sp	
 	ld c,16 
 	ld b,a 		; b = u count
-	ld (SMCloadCount),a
 	
 	ld hl,(ax) 
 	ld (SMCloadAX),hl
 	ld hl,(ay) 
 	ld (SMCloadAY),hl
+	
 	;fixed point conversion (256*n/16) = 16*n 
 	ld hl,(cx) 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	ld a,h 
-	ld (SMCloadCXH),a
-	ld a,l 
-	ld (SMCloadCXL),a
+	ld (SMCloadCX),hl  
+	ld a,$d4 
+	ld (SMCloadCX+2),a 
 	
 	ld hl,(cy) 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
-	ld (SMCloadCY),hl
-
+	ld (SMCloadCY),hl 
+	
 	ld hl,(by)
 	add hl,hl
 	add hl,hl
@@ -151,20 +156,23 @@ cont:
 	add hl,hl
 	ex de,hl ; de = dy
 	
-	ld h,(y0) 	; hl = y 
+	ld h,(y0) 	;  sps = yi 
 	ld l,0 
-	ld.sis sp,hl 	; sps = yi
+	ld.sis sp,hl
 	exx 
-	ld a,(x0) 
-	ld ix,0 
+	ld a,(x0) 	;ix = xi 
+	ld ixl,0 
 	ld ixh,a 
-	ld bc,$D48000
+	
+	ld bc,$D48000	;bc = texture ptr 
 	ld a,(v0) 
 	add a,b 
 	ld b,a 
 	ld c,(u0) 
-	ld de,$D40000
-	ld hl,(bx) 
+	
+	ld de,$D40000	;de = screen ptr 
+	
+	ld hl,(bx) 	; spl = dx
 	add hl,hl
 	add hl,hl
 	add hl,hl
@@ -174,14 +182,16 @@ cont:
 	
 	ld a,(shader) 
 	ld (_currentShader),a
+	ld a,(light) 
+	ld i,a
 	
-	ld iy,(light)
+dispatch: 
 	exx 
 	jp shaderUloop
 	
 ;------------------------------
 
-virtual at $E30800
+virtual at $E30880
 _shaderRoutine:
 
 ; called after each line drawn to update deltas and counters for next line.
@@ -193,29 +203,27 @@ _shaderRoutine:
 ; dx += ax 
 shaderVloop: 
 	exx 
-	ld d,0 
-SMCloadCXH:=$-1 
-	ld e,0 
-SMCloadCXL:=$-1
+	ld de,0
+SMCloadCX:=$-3
 	add ix,de 
 	lea hl,ix+0 
 	inc b	 ; v++ 
-	ld c,iyh ; u = u0 
+	ld a,c 
+	sub a,16 ; reset to u0
+	ld c,a 
 	exx 
 	ld hl,0 
 SMCloadAY:=$-3 
 	add hl,de 
 	ex de,hl 
-	ld hl,0 
+	ld hl,0
 SMCloadAX:=$-3 
 	add hl,sp 
 	ld sp,hl 
-	ld hl,0 
-SMCloadCY:=$-3 
+	ld hl,0
+SMCloadCY:=$-3	
 	add.sis hl,sp 
 	ld.sis sp,hl 
-	ld b,0 	; reset u count
-SMCloadCount:=$-1 
 	dec c 
 	jp nz,shaderUloop 
 	ld sp,0 

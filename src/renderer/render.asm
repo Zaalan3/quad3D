@@ -71,8 +71,14 @@ tcx equ iy+16
 tnext equ iy+18
 
 _qdRender: 
+	or a,a 
+	sbc hl,hl 
+	add hl,sp
+	ld sp,$E30BFC 
+	push hl
 	push ix
 	ld ix,$E10010
+	 
 	; init face buckets 
 	ld hl,_qdFaceBucket
 	ld de,_qdFaceBucket+1 
@@ -277,7 +283,7 @@ faceloop:
 	jq z,skipFace 
 	; shader is clipped if BOTTOM|TOP
 	ld b,(shader) 
-	and a,3 
+	and a,00001100b  
 	jr Z,$+3
 	inc b 
 	
@@ -461,8 +467,12 @@ StoreSP:=$-3
 _renderFaces: 
 	ld a,$FF 
 	ld (_currentShader),a
-	ld hl,(bucketMax) 
-	ld de,(bucketMin) 
+	ld hl,(bucketMax)
+	bit 7,h 
+	jq nz,return
+	ld de,(bucketMin)
+	bit 7,d 
+	jq nz,return
 	or a,a 
 	sbc hl,de 
 	jq c,return
@@ -516,6 +526,8 @@ skipbucket:
 	pop hl
 return:
 	pop ix 
+	pop hl 
+	ld sp,hl
 	ret 
 	
 	

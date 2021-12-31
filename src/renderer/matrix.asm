@@ -287,7 +287,6 @@ earlyZ:
 	ld (outcode),$FF ; out of range 
 	jq skipVert
 skipEarlyZ: 	
-	add hl,de
 	dec l 
 	add hl,hl  
 	ld de,_ZinvLUT

@@ -353,6 +353,53 @@ faceloop:
 	jq c,$+6 
 	set 1,(tshader)
 	
+	; find sum of distances (8.2 average)  
+	or a,a 
+	sbc hl,hl 
+	ex de,hl 
+	or a,a 
+	sbc hl,hl
+	ld l,(depth0) 
+	ld e,(depth1) 
+	add hl,de 
+	ld e,(depth2) 
+	add hl,de 
+	ld e,(depth3) 
+	add hl,de 
+	dec hl	
+	bit 7,h 
+	jq nz,loadFacePointer
+	
+	; update min and max buckets 
+	ex de,hl
+	ld hl,(bucketMax) 
+	or a,a 
+	sbc hl,de 
+	jr nc,$+5 
+	ld (bucketMax),de 
+	
+	ld hl,(bucketMin) 
+	or a,a 
+	sbc hl,de 
+	jr c,$+5 
+	ld (bucketMin),de 
+	; update this face's bucket
+	ld hl,_qdFaceBucket
+	add hl,de
+	add hl,de
+	ld bc,(hl) 
+	ld (tnext),bc 
+	ld de,(numFaces) 
+	ld (hl),e 
+	inc hl 
+	ld (hl),d 
+	inc de 	
+	ld (numFaces),de
+	
+	ld a,(x0)
+	ld (tx0),a
+	ld a,(y0) 
+	ld (ty0),a
 	
 	; cy = y1 - y0 
 	ld hl,(y1) 
@@ -383,7 +430,8 @@ faceloop:
 	ld de,(x0)
 	or a,a 
 	sbc hl,de 
-	ld (tcx),hl 
+	ld (tcx),l 
+	ld (tcx+1),h
 	;bx = x3 - x0 
 	ld hl,(x3) 
 	or a,a 
@@ -400,51 +448,6 @@ faceloop:
 	ld (tax),l
 	ld (tax+1),h 
 	
-	; find sum of distances (8.2 average)  
-	or a,a 
-	sbc hl,hl 
-	ex de,hl 
-	or a,a 
-	sbc hl,hl
-	ld l,(depth0) 
-	ld e,(depth1) 
-	add hl,de 
-	ld e,(depth2) 
-	add hl,de 
-	ld e,(depth3) 
-	add hl,de 
-	dec hl	
-	
-	ld a,(x0)
-	ld (tx0),a
-	ld a,(y0) 
-	ld (ty0),a
-
-	; update min and max buckets 
-	ex de,hl
-	ld hl,(bucketMax) 
-	or a,a 
-	sbc hl,de 
-	jr nc,$+5 
-	ld (bucketMax),de 
-	
-	ld hl,(bucketMin) 
-	or a,a 
-	sbc hl,de 
-	jr c,$+5 
-	ld (bucketMin),de 
-	; update this face's bucket
-	ld hl,_qdFaceBucket
-	add hl,de
-	add hl,de
-	ld bc,(hl) 
-	ld (tnext),bc 
-	ld de,(numFaces) 
-	ld (hl),e 
-	inc hl 
-	ld (hl),d 
-	inc de 	
-	ld (numFaces),de
 	
 	;next face cache entry
 	lea iy,iy+20 
@@ -468,14 +471,10 @@ _renderFaces:
 	ld a,$FF 
 	ld (_currentShader),a
 	ld hl,(bucketMax)
-	bit 7,h 
-	jq nz,return
 	ld de,(bucketMin)
-	bit 7,d 
-	jq nz,return
 	or a,a 
 	sbc hl,de 
-	jq c,return
+	jq m,return
 	push hl 
 	add hl,de 
 	ex de,hl

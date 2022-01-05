@@ -10,11 +10,9 @@ typedef struct {
 	int16_t z;
 } qdVertex; 
 
-enum shader_type { 
-	SHADER_TEXTURED = 0,
-	SHADER_FLAT = 4
-}; 
-
+#define	SHADER_TEXTURED 0
+#define SHADER_FLAT 4
+ 
 // 12 bytes 
 typedef struct {
 	uint8_t shader; 	// shader type 
@@ -34,12 +32,14 @@ typedef struct {
 	qdFace* face;
 } qdObject; 
 
-// for easy defines
-#define packNibble(x,y) (16*y + x)
-// 8 bytes 
+
+// 16 bytes 
 typedef struct { 
-	int16_t x,y,z; 
-	uint8_t u,v; 
+	int16_t x,y,z; // world position 
+	uint8_t u,v,w,h; // texture uv and width/height 
+	int16_t xs,ys; // screen position 
+	uint8_t depth; // z 
+	uint8_t outcode; // clipping outcode
 } qdSprite; 
 
 #define TOP 0b00001000

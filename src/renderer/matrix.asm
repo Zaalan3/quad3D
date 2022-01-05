@@ -7,10 +7,6 @@ public _matrixRoutine
 public _matrixRoutine_len
 public _matrixRoutine_src
 
-public _matrixRow0Multiply
-public _matrixRow1Multiply
-public _matrixRow2Multiply
-
 extern canvas_width
 extern canvas_height
 extern canvas_offset
@@ -49,92 +45,70 @@ ys equ iy+2
 depth equ iy+4 
 outcode equ iy+5
 
+mulRow:=$E10010 
+
+;ix = vertex 
+;iy = matrix row 
+;destroys b' & iy 
+mulRow_src:
+	exx 
+	ld b,3 
+.loop: 
+	exx
+	ld de,(ix+0) 
+	ld bc,(iy+0) 
+	ld h,d
+	ld l,b 
+	mlt hl 
+	ld a,l 
+	bit 7,d 
+	jr Z,$+3 
+	sub a,c  
+	bit 7,b 
+	jr Z,$+3  
+	sub a,e
+	ld h,e 
+	ld l,c 
+	mlt hl
+	ld l,h  
+	ld h,a 
+	ld a,b 
+	ld b,d  
+	ld d,a 
+	mlt de 
+	mlt bc 
+	add hl,de 
+	add hl,bc  	
+	add.sis hl,sp
+	ld.sis sp,hl
+	exx 
+	lea ix,ix+2 
+	lea iy,iy+2 
+	djnz .loop 
+	lea ix,ix-6
+	pop iy
+	exx 
+	ret 
+mulRow_len:= $ - mulRow_src
+assert mulRow_len <= 64
+
 ; loads matrix smc bytes ( except translation column )
 ; IY = matrix pointer
 _loadMatrix: 
-	ld b,$93 	; sub a,e 
-	ld c,0 		; nop 
+	; load multiplication routine
+	ld de,mulRow
+	ld hl,mulRow_src
+	ld bc,mulRow_len
+	ldir 
 	
-	ld hl,(m00)
-	ld (SMCloadM00),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM00),a 
+	lea hl,m00
+	ld (SMCLoadM00),hl
 	
-	ld hl,(m01)
-	ld (SMCloadM01),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM01),a 
-	
-	ld hl,(m02)
-	ld (SMCloadM02),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM02),a 
-	
-	ld hl,(m10)
-	ld (SMCloadM10),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM10),a 
-	
-	ld hl,(m11)
-	ld (SMCloadM11),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM11),a 
-	
-	ld hl,(m12)
-	ld (SMCloadM12),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM12),a 
-	
-	ld hl,(m20)
-	ld (SMCloadM20),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM20),a 
-	
-	ld hl,(m21)
-	ld (SMCloadM21),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM21),a
-	
-	ld hl,(m22)
-	ld (SMCloadM22),hl
-	bit 7,h 
-	jr Z,$+5
-	ld a,b 
-	jr $+3 
-	ld a,c 
-	ld (SMCsignM22),a 
+	lea hl,m10
+	ld (SMCLoadM10),hl
+
+	lea hl,m20
+	ld (SMCLoadM20),hl
 	
 	ret
 	
@@ -144,11 +118,13 @@ _setCameraPosition:
 	ld iy,_qdCameraMatrix
 	call _loadMatrix
 	lea ix,cx	; offset of camera position
-	or a,a 
+	ld a,$e3 
+	ld mb,a 
+	or a,a
 	sbc hl,hl 
-	ld (SMCLoadX),hl 
-	ld (SMCLoadY),hl 
-	ld (SMCLoadZ),hl 
+	ld.sis (SMCLoadX - $e30000),hl 
+	ld.sis (SMCLoadY - $e30000),hl 
+	ld.sis (SMCLoadZ - $e30000),hl 
 	; translate object position
 	call _matrixRow0Multiply
 	ex de,hl 
@@ -169,17 +145,21 @@ _setCameraPosition:
 	sbc hl,de
 	pop de 
 	pop bc 
-	ld (cx),bc 
-	ld (cy),de
-	ld (cz),l 
-	ld (cz+1),h
-	ld (SMCLoadX),bc
-	ld (SMCLoadY),de
-	ld (SMCLoadZ),hl
+	ld.sis (SMCLoadX - $e30000),bc
+	ld.sis (SMCLoadY - $e30000),de
+	ld.sis (SMCLoadZ - $e30000),hl
+	ld (tx),bc
+	ld (ty),de
+	ld (tz),hl
+	
+	ld a,$d0
+	ld mb,a 
 	pop ix
 	ret
 
-	
+tx: rb 3
+ty: rb 3
+tz: rb 3
 ;---------------------------------------------------------
 _qdTransformVertices: 
 	push ix 
@@ -188,17 +168,20 @@ _qdTransformVertices:
 	
 	ld iy,(ix+0)
 	call _loadMatrix
-	ld hl,(cx) 
-	ld (SMCLoadX),hl 
-	ld hl,(cy) 
-	ld (SMCLoadY),hl
-	ld hl,(cz) 
-	ld (SMCLoadZ),hl
+	ld a,$e3 
+	ld mb,a 
+	or a,a
+	sbc hl,hl 
+	ld.sis (SMCLoadX - $e30000),hl 
+	ld.sis (SMCLoadY - $e30000),hl 
+	ld.sis (SMCLoadZ - $e30000),hl
+	ld a,$d0
+	ld mb,a 
 	
 	ld iy,(ix+6) 
 	ld hl,(ix+9) 
 	ld ix,(ix+3) 
-	ld bc,1
+	ld de,1
 loop:
 	exx 
 	call _matrixRow0Multiply
@@ -216,7 +199,7 @@ loop:
 	lea iy,iy+6 
 	exx 
 	or a,a 
-	sbc hl,bc
+	sbc hl,de
 	jr nz,loop
 	pop ix
 	ret 
@@ -246,23 +229,28 @@ _projectVertices:
 	ld (SMCSizeVertex),a
 	lea ix,iy+0
 	ld iy,_qdCameraMatrix
-	or a,a 
+	
+	ld a,$e3 
+	ld mb,a 
+	or a,a
 	sbc hl,hl
-	ld (SMCLoadX),hl
-	ld (SMCLoadY),hl
-	ld (SMCLoadZ),hl
+	ld.sis (SMCLoadX - $e30000),hl
+	ld.sis (SMCLoadY - $e30000),hl
+	ld.sis (SMCLoadZ - $e30000),hl
 	call _matrixRow0Multiply
-	ld de,(cx) 
+	ld de,(tx) 
 	add hl,de
-	ld (SMCLoadX),hl 
+	ld.sis (SMCLoadX - $e30000),hl 
 	call _matrixRow1Multiply
-	ld de,(cy)
+	ld de,(ty)
 	add hl,de
-	ld (SMCLoadY),hl
+	ld.sis (SMCLoadY - $e30000),hl
 	call _matrixRow2Multiply
-	ld de,(cz)
+	ld de,(tz)
 	add hl,de
-	ld (SMCLoadZ),hl
+	ld.sis (SMCLoadZ - $e30000),hl
+	ld a,$d0
+	ld mb,a 
 	
 	ld de,(ix+6)  ; de = vertex count
 	ld ix,(ix+10) ; ix = vertex pointer
@@ -416,263 +404,33 @@ SMCSizeVertex:=$-1
 	pop iy
 	ret
 	
-
-
 ;---------------------------------------------------------
 _matrixRow0Multiply:
-	ld de,(x)
-	ld bc,0 
-SMCloadM00:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM00:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	ld.sis sp,hl
-	
-	ld de,(y)
-	ld bc,0 
-SMCloadM01:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM01:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp
-	ld.sis sp,hl
-	
-	ld de,(z)
-	ld bc,0 
-SMCloadM02:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM02:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp
-	ld de,0 
-SMCLoadX:=$-3 
-	add.sis hl,de 
-	ret 
+	push iy
+	ld.sis sp,0 
+SMCLoadX:= $ - 2 
+	ld iy,0
+SMCLoadM00:= $ - 3	
+	jp mulRow
 
 
 ;---------------------------------------------------------
 _matrixRow1Multiply:
-	ld de,(x)
-	ld bc,0 
-SMCloadM10:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM10:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	ld.sis sp,hl
-	
-	ld de,(y)
-	ld bc,0 
-SMCloadM11:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM11:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp 
-	ld.sis sp,hl
-	
-	ld de,(z)
-	ld bc,0 
-SMCloadM12:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM12:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp 
-	ld de,0 
-SMCLoadY:=$-3 
-	add.sis hl,de
-	ret 
+	push iy 
+	ld.sis sp,0 
+SMCLoadY:= $ - 2 
+	ld iy,0 
+SMCLoadM10:= $ - 3	
+	jp mulRow
 	
 ;---------------------------------------------------------
 _matrixRow2Multiply:
-	ld de,(x)
-	ld bc,0 
-SMCloadM20:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM20:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	ld.sis sp,hl 
-	
-	ld de,(y)
-	ld bc,0 
-SMCloadM21:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM21:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp 
-	ld.sis sp,hl 
-	
-	ld de,(z)
-	ld bc,0 
-SMCloadM22:=$-3
-	ld h,d 
-	ld l,b 
-	mlt hl
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	sub a,e
-SMCsignM22:=$-1
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
-	add.sis hl,sp
-	ld de,0 
-SMCLoadZ:=$-3 
-	add.sis hl,de
-	ret 
+	push iy 
+	ld.sis sp,0 
+SMCLoadZ:= $ - 2 
+	ld iy,0 
+SMCLoadM20:= $ - 3	
+	jp mulRow
 	
 assert $<$E30B30
 load _matrixroutine_data: $-$$ from $$

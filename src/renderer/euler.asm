@@ -74,7 +74,7 @@ _qdEulerToMatrix:
 	ex de,hl 
 	pop hl 
 	or a,a 
-	sbc hl,de 
+	sbc hl,de
 	ld (m00),hl 
 	
 	ld hl,(c2) 

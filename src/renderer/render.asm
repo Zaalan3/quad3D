@@ -1,6 +1,5 @@
 public _qdRender
 
-
 extern _qdActiveSprite
 extern _qdNumSprites
 extern _qdActiveObject
@@ -13,8 +12,8 @@ extern _qdFaceCache
 extern _callShader
 extern _setCameraPosition
 extern _currentShader
-
 extern _ZinvLUT
+
 
 shader equ iy+0
 light equ iy+1	
@@ -29,32 +28,31 @@ numFaces equ ix+0
 cachePointer equ ix+3 
 bucketMin equ ix+6 
 bucketMax equ ix+9
+facePointer equ ix+12 
 
-x0 equ ix+12
-y0 equ ix+14
-depth0 equ ix+16 
-outcode0 equ ix+17
-x1 equ ix+18
-y1 equ ix+20
-depth1 equ ix+22
-outcode1 equ ix+23
-x2 equ ix+24
-y2 equ ix+26
-depth2 equ ix+28
-outcode2 equ ix+29
-x3 equ ix+30 
-y3 equ ix+32
-depth3 equ ix+34
-outcode3 equ ix+35 
+x0 equ ix+15
+y0 equ ix+17
+depth0 equ ix+19 
+outcode0 equ ix+20
+x1 equ ix+21
+y1 equ ix+23
+depth1 equ ix+25
+outcode1 equ ix+26
+x2 equ ix+27
+y2 equ ix+29
+depth2 equ ix+31
+outcode2 equ ix+32
+x3 equ ix+33
+y3 equ ix+35
+depth3 equ ix+37
+outcode3 equ ix+38 
 
-facePointer equ ix+36
-
-spriteX equ ix+39 
-spriteY equ ix+41
-spriteDepth equ ix+43 
-spriteOutcode equ ix+44  
-spriteU equ ix+45
-spriteV equ ix+46
+spriteX equ ix+15 
+spriteY equ ix+17
+spriteDepth equ ix+19 
+spriteOutcode equ ix+20  
+spriteU equ ix+21
+spriteV equ ix+22
 
 tshader equ iy+0
 tlight equ iy+1
@@ -77,7 +75,7 @@ _qdRender:
 	ld sp,$E30BFC 
 	push hl
 	push ix
-	ld ix,$E10010
+	ld ix,$E30B80
 	 
 	; init face buckets 
 	ld hl,_qdFaceBucket
@@ -104,7 +102,7 @@ processSprites:
 	ld b,a 
 	ld iy,_qdVertexCache	
 	call _projectSprites
-	ld ix,$E10010
+	ld ix,$E30B80
 	ld (facePointer),iy 
 	ld iy,(cachePointer)
 spriteloop: 
@@ -223,7 +221,7 @@ objectloop:
 cacheFaces: 
 	ld de,(iy+8) ;face count
 	ld iy,(iy+13) ; face pointer 
-	ld ix,$E10010
+	ld ix,$E30B80
 	ld hl,1 
 	ex.sis hl,de
 faceloop:
@@ -465,9 +463,9 @@ StoreSP:=$-3
 	pop iy 
 	dec b 
 	jq nz,objectloop
-	
+		
 ; iterates through face buckets and renders faces
-_renderFaces: 
+renderFaces: 
 	ld a,$FF 
 	ld (_currentShader),a
 	ld hl,(bucketMax)

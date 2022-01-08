@@ -15,10 +15,9 @@
 #include "renderer/renderer.h" 
 #include "gfx/gfx.h"
 
-extern qdObject squareModel;
-extern qdObject monkey;
-extern qdObject zelda;
 extern qdObject grid;
+extern qdObject monkey;  
+extern qdObject zelda;  
 
 #define startTimer() timer_1_Counter = 0; \
 					timer_Control = TIMER1_ENABLE|TIMER1_CPU|TIMER1_UP;
@@ -30,9 +29,11 @@ int main(void)
 	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	qdSprite spr = {0,20,0,16,0}; 
-	
-	qdVertex pos = {0,5,40};
+	//qdSprite spr = {0,20,0,16,0}; 
+
+	qdCameraMatrix.x = 128;
+	qdCameraMatrix.y = 132;
+	qdCameraMatrix.z = 150;
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);
@@ -56,26 +57,26 @@ int main(void)
 	
 	
 	
-	kb_Scan();
+	kb_SetMode(MODE_3_CONTINUOUS);
 	while(!kb_IsDown(kb_KeyClear)) { 
 		qdSetCameraAngle(ax,ay,az);
 		
 		if(kb_IsDown(kb_Key4)) { 
-			pos.x--; 
+			qdCameraMatrix.x--; 
 		} else if(kb_IsDown(kb_Key6)) { 
-			pos.x++; 
+			qdCameraMatrix.x++; 
 		} 
 		
 		if(kb_IsDown(kb_KeyUp)) { 
-			pos.y++; 
+			qdCameraMatrix.y++; 
 		} else if(kb_IsDown(kb_KeyDown)) { 
-			pos.y--; 
+			qdCameraMatrix.y--; 
 		} 
 		
 		if(kb_IsDown(kb_Key8)) { 
-			pos.z--; 
+			qdCameraMatrix.z--; 
 		} else if(kb_IsDown(kb_Key2)) { 
-			pos.z++; 
+			qdCameraMatrix.z++; 
 		}
 		
 		if(kb_IsDown(kb_KeyLeft)) { 
@@ -83,6 +84,7 @@ int main(void)
 		} else if(kb_IsDown(kb_KeyRight)) { 
 			ay-=3; 
 		} 
+		
 		
 		if(kb_IsDown(kb_Key5)) { 
 		// TODO: figure out switch statements for non integers 
@@ -92,21 +94,18 @@ int main(void)
 				qdActiveObject[0] = &monkey;
 			else 
 				qdActiveObject[0] = &grid; 
-		} 
-		
-		qdCameraMatrix.x = pos.x;
-		qdCameraMatrix.y = pos.y;
-		qdCameraMatrix.z = pos.z;
-		
+		}  
+	
 		qdClearCanvas();
 		startTimer(); 
 		qdRender(); 
 		stopTimer();
-		gfx_Wait();
+		int time = getTimer(); 
 		qdBlitCanvas();
+		gfx_Wait();
 		
 		gfx_SetTextXY(0,0);
-		gfx_PrintUInt(getTimer(),8);
+		gfx_PrintUInt(time,8);
 		gfx_PrintChar(' '); 
 		gfx_PrintUInt(ax,3);
 		gfx_PrintChar(' '); 

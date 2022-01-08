@@ -3,11 +3,11 @@
 
 // type defines 
 
-// 6 bytes
+// 3 bytes
 typedef struct { 
-	int16_t x; 
-	int16_t y; 
-	int16_t z;
+	uint8_t x; 
+	uint8_t y; 
+	uint8_t z;
 } qdVertex; 
 
 #define	SHADER_TEXTURED 0

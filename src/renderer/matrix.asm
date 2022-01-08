@@ -50,7 +50,7 @@ mulRow:=$E10010
 ;ix = vertex 
 ;iy = matrix row 
 ;destroys b' & iy 
-mulRow_src:
+mulRowPosition_src:
 	exx 
 	ld b,3 
 .loop: 
@@ -84,39 +84,60 @@ mulRow_src:
 	exx 
 	lea ix,ix+2 
 	lea iy,iy+2 
-	djnz .loop 
+	djnz mulRowPosition_src.loop 
 	lea ix,ix-6
 	pop iy
 	exx 
 	ret 
-mulRow_len:= $ - mulRow_src
-assert mulRow_len <= 64
+mulRowPosition_len:= $ - mulRowPosition_src
+assert mulRowPosition_len <= 64
 
-; loads matrix smc bytes ( except translation column )
-; IY = matrix pointer
-_loadMatrix: 
-	; load multiplication routine
-	ld de,mulRow
-	ld hl,mulRow_src
-	ld bc,mulRow_len
-	ldir 
-	
-	lea hl,m00
-	ld (SMCLoadM00),hl
-	
-	lea hl,m10
-	ld (SMCLoadM10),hl
+mulRowVertex_src: 
+	ld b,3 
+.loop: 
+	ld c,(ix+0) 
+	ld de,(iy+0) 
+	ld h,e 
+	ld l,c 
+	mlt hl 
+	ld l,h 
+	ld h,0 
+	bit 7,d 
+	jr Z,$+10
+	ld a,c 
+	neg  
+	ld h,a 
+	ld e,c 
+	mlt de
+	add hl,de
+	add.sis hl,sp 
+	ld.sis sp,hl 
+	inc ix 
+	lea iy,iy+2 
+	djnz mulRowVertex_src.loop 
+	lea ix,ix-3 
+	pop iy 
+	ret 
+mulRowVertex_len:= $ - mulRowVertex_src
+assert mulRowVertex_len <= 64	
 
-	lea hl,m20
-	ld (SMCLoadM20),hl
-	
-	ret
-	
 ;---------------------------------------------------------	
 _setCameraPosition: 
 	push ix 
 	ld iy,_qdCameraMatrix
-	call _loadMatrix
+	
+	;load smc bytes
+	ld de,mulRow
+	ld hl,mulRowPosition_src
+	ld bc,mulRowPosition_len 
+	ldir 
+	lea hl,m00
+	ld (SMCLoadM00),hl
+	lea hl,m10
+	ld (SMCLoadM10),hl
+	lea hl,m20
+	ld (SMCLoadM20),hl
+	
 	lea ix,cx	; offset of camera position
 	ld a,$e3 
 	ld mb,a 
@@ -127,7 +148,7 @@ _setCameraPosition:
 	ld.sis (SMCLoadZ - $e30000),hl 
 	; translate object position
 	call _matrixRow0Multiply
-	ex de,hl 
+	ex de,hl
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
@@ -136,13 +157,13 @@ _setCameraPosition:
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
-	sbc hl,de
+	sbc hl,de 
 	push hl 
 	call _matrixRow2Multiply
 	ex de,hl 
 	or a,a 
-	sbc hl,hl 
-	sbc hl,de
+	sbc hl,hl
+	sbc hl,de 
 	pop de 
 	pop bc 
 	ld.sis (SMCLoadX - $e30000),bc
@@ -167,7 +188,18 @@ _qdTransformVertices:
 	add ix,sp 
 	
 	ld iy,(ix+0)
-	call _loadMatrix
+	;load smc bytes
+	ld de,mulRow
+	ld hl,mulRowVertex_src
+	ld bc,mulRowVertex_len
+	ldir 
+	lea hl,m00
+	ld (SMCLoadM00),hl
+	lea hl,m10
+	ld (SMCLoadM10),hl
+	lea hl,m20
+	ld (SMCLoadM20),hl
+	
 	ld a,$e3 
 	ld mb,a 
 	or a,a
@@ -195,7 +227,7 @@ loop:
 	ld (iy+2),de 
 	ld (iy+4),l 
 	ld (iy+5),h 
-	lea ix,ix+6 
+	lea ix,ix+3 
 	lea iy,iy+6 
 	exx 
 	or a,a 
@@ -225,10 +257,15 @@ _projectVertices:
 	push iy 
 	push bc
 	
-	ld a,6 
+	ld a,3 
 	ld (SMCSizeVertex),a
 	lea ix,iy+0
 	ld iy,_qdCameraMatrix
+	
+	ld de,mulRow
+	ld hl,mulRowPosition_src
+	ld bc,mulRowPosition_len 
+	ldir 
 	
 	ld a,$e3 
 	ld mb,a 
@@ -252,6 +289,11 @@ _projectVertices:
 	ld a,$d0
 	ld mb,a 
 	
+	ld de,mulRow
+	ld hl,mulRowVertex_src
+	ld bc,mulRowVertex_len
+	ldir 
+	
 	ld de,(ix+6)  ; de = vertex count
 	ld ix,(ix+10) ; ix = vertex pointer
 	
@@ -266,9 +308,10 @@ _matrixRoutine:
 
 projloop: 	
 	exx 
+	
 	call _matrixRow2Multiply
 	ld (depth),l 
-	 
+
 	bit 7,l 
 	jq Z,skipEarlyZ
 earlyZ:
@@ -388,12 +431,10 @@ leftX:
 	
 	ld (outcode),h  
 	; copy UV for sprites
-	ld hl,(ix+6) 
-	ld (iy+6),hl
 	
 skipVert: 
 	exx 
-	lea ix,ix+6 
+	lea ix,ix+3 
 SMCSizeVertex:=$-1
 	lea iy,iy+8 
 	or a,a 
@@ -412,7 +453,6 @@ SMCLoadX:= $ - 2
 	ld iy,0
 SMCLoadM00:= $ - 3	
 	jp mulRow
-
 
 ;---------------------------------------------------------
 _matrixRow1Multiply:

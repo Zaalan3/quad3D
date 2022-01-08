@@ -364,10 +364,14 @@ faceloop:
 	add hl,de 
 	ld e,(depth3) 
 	add hl,de 
-	dec hl	
-	bit 7,h 
-	jq nz,loadFacePointer
+		
+	ld de,512 
+	or a,a 
+	sbc hl,de 
+	jq p,loadFacePointer
 	
+	add hl,de
+	dec hl
 	; update min and max buckets 
 	ex de,hl
 	ld hl,(bucketMax) 

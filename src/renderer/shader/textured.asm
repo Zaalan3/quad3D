@@ -35,7 +35,7 @@ repeat 4
 	ld a,h 
 	exx 
 	ld d,a 
-	cp a,canvas_height
+	cp a,canvas_height-1 
 	jr nc,$+5
 	ld e,h 
 	ld a,(bc) 
@@ -80,7 +80,7 @@ bilerp32_clipped:
 repeat 2
 	ld a,h 
 	exx 
-	cp a,canvas_height 
+	cp a,canvas_height-1 
 	jr nc,$+12
 	ld d,a
 	ld e,h 

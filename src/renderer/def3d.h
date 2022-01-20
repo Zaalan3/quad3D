@@ -33,28 +33,16 @@ typedef struct {
 } qdObject; 
 
 
-// 16 bytes 
+#define spriteSize(n) (n>>2)
+// 19 bytes 
 typedef struct { 
 	int16_t x,y,z; // world position 
-	uint8_t u,v,w,h; // texture uv and width/height 
-	int16_t xs,ys; // screen position 
-	uint8_t depth; // z 
-	uint8_t outcode; // clipping outcode
+	uint8_t u,v;  // texture uv
+	uint8_t hw,hh;  // half width/height.
+	uint8_t depth; // screen position and depth
+	int16_t xs,xe;
+	int16_t ys,ye;
 } qdSprite; 
-
-#define TOP 0b00001000
-#define BOTTOM 0b00000100
-#define LEFT 0b00000010
-#define RIGHT 0b00000001 
-#define OOB 0xFF
-
-// 8 bytes 
-struct qd_vertex_cached { 
-	int16_t xs,ys; // screen position
-	uint8_t depth; // z 
-	uint8_t outcode; // clipping outcode  
-	uint8_t rs0,rs1; // reserved
-} ; 
 
 
 // 20 bytes

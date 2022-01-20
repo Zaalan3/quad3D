@@ -4,17 +4,35 @@ extern _qdActiveSprite
 extern _qdNumSprites
 extern _qdActiveObject
 extern _qdNumObjects
+
+extern _setCameraPosition
 extern _projectVertices
 extern _projectSprites
+
 extern _qdVertexCache
 extern _qdFaceBucket
 extern _qdFaceCache
-extern _callShader
-extern _setCameraPosition
+extern _qdClearCanvas
+
 extern _currentShader
+extern _callShader
+
 extern _ZinvLUT
 
+extern canvas_width
+extern canvas_height
+extern canvas_offset
 
+; outcodes 
+outTop equ 01000b
+outBottom equ 0100b
+outLeft equ 0010b
+outRight equ 0001b 
+outOOB equ $FF
+
+;  vars 
+
+; face 
 shader equ iy+0
 light equ iy+1	
 u0 equ iy+2
@@ -24,6 +42,7 @@ vt1 equ iy+6
 vt2 equ iy+8
 vt3 equ iy+10
 	
+; stack vars 
 numFaces equ ix+0 
 cachePointer equ ix+3 
 bucketMin equ ix+6 
@@ -47,13 +66,21 @@ y3 equ ix+35
 depth3 equ ix+37
 outcode3 equ ix+38 
 
-spriteX equ ix+15 
-spriteY equ ix+17
-spriteDepth equ ix+19 
-spriteOutcode equ ix+20  
-spriteU equ ix+21
-spriteV equ ix+22
+; sprite vars 
+spriteX equ ix+0 
+spriteY equ ix+2
+spriteZ equ ix+4 
+spriteU equ ix+6
+spriteV equ ix+7 
+spriteHW equ ix+8 
+spriteHH equ ix+9 
+sdepth equ ix+10 
+sxs equ ix+11 
+sxe equ ix+13
+sys equ ix+15 
+sye equ ix+17 
 
+; face cache vars 
 tshader equ iy+0
 tlight equ iy+1
 tu0 equ iy+2
@@ -68,6 +95,12 @@ tcy equ iy+14
 tcx equ iy+16
 tnext equ iy+18
 
+txlen equ iy+2 
+tylen equ iy+3 
+tustart equ iy+6
+tvstart equ iy+9
+tdelta equ iy+12 
+
 _qdRender: 
 	or a,a 
 	sbc hl,hl 
@@ -81,7 +114,7 @@ _qdRender:
 	ld hl,_qdFaceBucket
 	ld de,_qdFaceBucket+1 
 	ld (hl),$FF 
-	ld bc,2047 
+	ld bc,1024 
 	ldir 
 	; init variables 
 	ld (numFaces),bc 
@@ -99,76 +132,76 @@ processSprites:
 	ld a,(_qdNumSprites) 
 	or a,a 
 	jq Z,processObjects 
-	ld b,a 
-	ld iy,_qdVertexCache	
+	ld b,a 	; b = sprite count
 	call _projectSprites
-	ld ix,$E30B80
-	ld (facePointer),iy 
-	ld iy,(cachePointer)
+	ld ix,_qdActiveSprite ; ix = pointer to sprite
+	ld iy,_qdFaceCache 
 spriteloop: 
 	exx 
-	ld hl,(facePointer)
-	lea de,spriteX 
-	ld bc,8 
-	ldir 
-	ld (facePointer),hl 
-	
-	ld a,(spriteOutcode) 
-	cp a,$FF 	; skip if out of bounds 
+	; skip if sprite depth = $FF 
+	ld a,(sdepth) 
+	cp a,$FF
 	jq Z,skipSprite 
-	tst a,0101b 	; skip if vertex below or to the right offscreen 
-	jq nz,skipSprite 
-findWidth:
-	; compute width and height
+	
+	;delta = 2*z 
 	or a,a 
 	sbc hl,hl 
-	ld l,(spriteDepth) 
-	add hl,hl 
-	ld de,_ZinvLUT
-	add hl,de 
-	ld hl,(hl) 
-	; de = size = 4*f/z
-	xor a,a 
+	ld h,(spriteU) 
+	ld (tustart),hl
+	ld h,(spriteV) 
+	ld (tvstart),hl
+	ld h,l 
+	
+	ld l,a 
 	add hl,hl
-	add.sis hl,hl
-	rla 
-	ld l,h 
-	ld h,a 
-	ex de,hl 
-	
-	; skip sprite if y+size<0  
-	ld hl,(spriteY) 
-	add hl,de 
-	rl h 
-	jq c,skipSprite
-	xor a,a	; textured shader
-	ld hl,-17 ;if size > 16  
-	add hl,de 
-	jr c,$+4 
-	add a,2 
-	ld (tshader),a 
-; set face entry 
-	ld (tbx),de 
-	ld (tcy),de 
-	
-	ld hl,(spriteU) 
-	ld (tu0),hl 
-	ld h,(spriteY)  
-	ld l,(spriteX) 
-	ld (tx0),hl
-	xor a,a 
-	sbc hl,hl 
-	ld (tay),hl 
-	ld (tax+1),hl 
-	ld (tby+1),a 
-	ld (tcx),hl
-	
-	; find depth bucket 
-	ld l,(spriteDepth) 
+	ld (tdelta),hl 
 	add hl,hl 
-	add hl,hl
+	push hl ; depth bucket 
+	
+	ld (tshader),$80 ; sprite shader
+	;clip sxs  
+	ld hl,(sxs)
+	ld (tx0),l 
+	ld de,canvas_offset 
+	or a,a 
+	sbc.sis hl,de 
+	call c,correctU  ; correct ustart and x0 if sxs<offset 
+	
+	;xlen = min(width+offset,sxe) - sxs 
+	ld hl,(sxe) 
+	ld de,canvas_width+canvas_offset-1 
+	call minHLDE 
+	ld a,l 
+	sub a,(tx0) 
+	
+	cp a,1 
+	jq nz,.skipOnePixel
+.onePixel: 
+	pop de 
+	jq skipSprite
+.skipOnePixel: 
+	ld (txlen),a 
+	
+	;clip sys 
+	ld hl,(sys) 
+	ld (ty0),l 
+	bit 7,h 
+	call nz,correctV  ; correct y0 and vstart if sys<0 
+	
+	;ylen = min(height,sye) - sys 
+	ld hl,(sye) 
+	ld de,canvas_height-1 
+	call minHLDE 
+	ld a,l 
+	sub a,(ty0) 
+	ld (tylen),a 
+	
+	pop hl ; hl = depth bucket
+	push ix 
+	ld ix,$E30B80 ; ix = stack vars
+	
 	; update min and max buckets 
-	ex de,hl 
+	ex de,hl
 	ld hl,(bucketMax) 
 	or a,a 
 	sbc hl,de 
@@ -184,8 +217,8 @@ findWidth:
 	ld hl,_qdFaceBucket
 	add hl,de
 	add hl,de
-	ld de,(hl) 
-	ld (tnext),de 
+	ld bc,(hl) 
+	ld (tnext),bc 
 	ld de,(numFaces) 
 	ld (hl),e 
 	inc hl 
@@ -193,14 +226,15 @@ findWidth:
 	inc de 	
 	ld (numFaces),de
 	
-	; next face 
-	lea iy,iy+20 
-	
+	pop ix 
+	lea iy,iy+20 ; next face cache entry 
 skipSprite:
 	exx
+	lea ix,ix+19 ; next sprite 
 	dec b 
 	jq nz,spriteloop
 	
+	ld ix,$E30B80
 	ld (cachePointer),iy
 ;----------------------------------------
 ; process 3D objects 
@@ -220,7 +254,7 @@ objectloop:
 	call _projectVertices
 cacheFaces: 
 	ld de,(iy+8) ;face count
-	ld iy,(iy+13) ; face pointer 
+	ld iy,(iy+13) ; face pointer
 	ld ix,$E30B80
 	ld hl,1 
 	ex.sis hl,de
@@ -277,11 +311,11 @@ faceloop:
 	or a,c 
 	or a,d 
 	or a,e 
-	cp a,$FF 
+	cp a,outOOB 
 	jq z,skipFace 
-	; shader is clipped if BOTTOM|TOP
+	; shader is clipped if TOP|BOTTOM
 	ld b,(shader) 
-	and a,00001100b  
+	tst a, outTop + outBottom
 	jr Z,$+3
 	inc b 
 	
@@ -470,6 +504,7 @@ StoreSP:=$-3
 		
 ; iterates through face buckets and renders faces
 renderFaces: 
+	call _qdClearCanvas 
 	ld a,$FF 
 	ld (_currentShader),a
 	ld hl,(bucketMax)
@@ -531,6 +566,52 @@ return:
 	ld sp,hl
 	ret 
 	
+;------------------------------------
 	
+; hl = min(hl,de) (16 bit)
+minHLDE: 
+	or a,a 
+	sbc.sis hl,de 
+	jq c,$+4 
+	ex de,hl  
+	ret 
+	add hl,de
+	ret 
 
+
+correctU: 
+	ld (tx0),canvas_offset 
+	call correctUV 
+	ld de,(tustart) 
+	add hl,de 
+	ld (tustart),hl
+	ret 
+correctV: 
+	ld (ty0),0 
+	call correctUV
+	ld de,(tvstart) 
+	add hl,de 
+	ld (tvstart),hl 
+	ret 
+correctUV:  
+	ex de,hl 
+	or a,a 
+	sbc hl,hl 
+	sbc hl,de ; abs(hl) 
+	ex de,hl 
+	ld bc,(tdelta)
+	; fixed de*bc 
+	ld h,e 
+	ld l,c 
+	mlt hl
+	ld a,b 
+	ld b,d  
+	ld d,a 
+	mlt de 
+	mlt bc
+	ld a,h 
+	add a,c 
+	add a,e 
+	ld h,a
+	ret 
 	

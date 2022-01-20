@@ -25,13 +25,9 @@ extern qdObject* qdActiveObject[64];
 extern uint8_t qdNumSprites; 
 extern qdSprite qdActiveSprite[64];
 
-// processed vertices, reset for each object.
-// 8 kb
-extern struct qd_vertex_cached qdVertexCache[1024]; 
-
 // visible faces cache
-// 20 kb on heap
-extern struct qd_face_cached qdFaceCache[1024]; 
+// 10 kb
+extern struct qd_face_cached qdFaceCache[512]; 
 
 // face bucket linked lists
 // stores indices for the first face at each distance

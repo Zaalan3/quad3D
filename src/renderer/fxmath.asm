@@ -2,8 +2,6 @@ public _sqrtInt
 public _fxMul 
 public _fxDiv 
 public _fxSin 
-public _fxGetRecip
-public _mulRecip
 ; for Assembly usage
 
 public _MultiplyHLBC 
@@ -70,8 +68,26 @@ _MultiplyHLBC:
 	ret
 
 ;------------------------------------------------
+; signed fixed point division of HL by BC
+_fxDiv: 
+	pop de 
+	pop hl 
+	pop bc 
+	push bc
+	push hl
+	push de
+_fixedHLdivBC: 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl	; fallthrough to normal division routine
+;------------------------------------------------
 _DivideHLBC:
-; Performs signed interger division
+; Performs signed integer division
 ; Inputs:
 ;  HL : Operand 1
 ;  BC : Operand 2
@@ -157,7 +173,7 @@ Sqrt24Skip:
 	
 	
 ;------------------------------------------------	
-;Multiplies two 8.8 fixed point numbers HL & BC
+;Multiplies two signed 8.8 fixed point numbers HL & BC
 _fxMul: 
 	pop de 
 	pop hl 
@@ -190,63 +206,6 @@ _fixedHLmulBC:
 	add hl,de 
 	add hl,bc
 	ret 
-
-
-;------------------------------------------------
-; fixed point division of HL by BC
-_fxDiv: 
-	pop de 
-	pop hl 
-	pop bc 
-	push bc
-	push hl
-	push de
-_fixedHLdivBC: 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ex	de,hl
-	xor	a,a
-	sbc	hl,hl
-	sbc	hl,bc
-	jp	p,next0
-	push	hl
-	pop	bc
-	inc	a
-next0:
-	or	a,a
-	sbc	hl,hl
-	sbc	hl,de
-	jp	m,next1
-	ex	de,hl
-	inc	a
-next1:
-	add	hl,de
-	rra
-loop:
-
-repeat 24 
-	ex	de,hl
-	adc	hl,hl
-	ex	de,hl
-	adc	hl,hl
-	add	hl,bc
-	jr	c,$+4
-	sbc	hl,bc
-end repeat
- 
-	ex	de,hl
-	adc	hl,hl
-	ret	c
-	ex	de,hl
-	sbc	hl,hl
-	sbc	hl,de
-	ret
 
 ;------------------------------------------------
 ; returns fixed point sine of l

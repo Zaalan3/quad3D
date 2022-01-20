@@ -4,6 +4,7 @@ public _qdClearCanvas
 
 public _qdVertexCache 
 public _qdFaceBucket
+public _qdFaceCache 
 
 public canvas
 public canvas_width
@@ -17,8 +18,9 @@ canvas_offset:=48
 
 screen:=$D52C00 
 
-_qdFaceBucket:=$D52000
-_qdVertexCache:=$D50000
+_qdVertexCache:=$D40000
+_qdFaceBucket:=$D50000
+_qdFaceCache:=$D50400
 
 gfxFillScreenFastCode:=$E30800 
 

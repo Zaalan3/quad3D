@@ -23,6 +23,13 @@ extern _qdNumSprites
 
 extern _ZinvLUT
 
+; outcodes 
+outTop equ 01000b
+outBottom equ 0100b
+outLeft equ 0010b
+outRight equ 0001b 
+outOOB equ $FF
+
 m00 equ iy+0 
 m01 equ iy+2
 m02 equ iy+4
@@ -44,6 +51,25 @@ xs equ iy+0
 ys equ iy+2 
 depth equ iy+4 
 outcode equ iy+5
+rs1 equ iy+6 
+rs2 equ iy+7
+
+; sprite defines 
+
+spriteX equ ix+0 
+spriteY equ ix+2
+spriteZ equ ix+4 
+spriteU equ ix+6
+spriteV equ ix+7 
+spriteHW equ ix+8 
+spriteHH equ ix+9 
+sdepth equ ix+10 
+sxs equ ix+11 
+sxe equ ix+13
+sys equ ix+15 
+sye equ ix+17 
+
+
 
 mulRow:=$E10010 
 
@@ -84,7 +110,7 @@ mulRowPosition_src:
 	exx 
 	lea ix,ix+2 
 	lea iy,iy+2 
-	djnz mulRowPosition_src.loop 
+	djnz .loop
 	lea ix,ix-6
 	pop iy
 	exx 
@@ -114,7 +140,7 @@ mulRowVertex_src:
 	ld.sis sp,hl 
 	inc ix 
 	lea iy,iy+2 
-	djnz mulRowVertex_src.loop 
+	djnz .loop 
 	lea ix,ix-3 
 	pop iy 
 	ret 
@@ -138,7 +164,6 @@ _setCameraPosition:
 	lea hl,m20
 	ld (SMCLoadM20),hl
 	
-	lea ix,cx	; offset of camera position
 	ld a,$e3 
 	ld mb,a 
 	or a,a
@@ -146,7 +171,24 @@ _setCameraPosition:
 	ld.sis (SMCLoadX - $e30000),hl 
 	ld.sis (SMCLoadY - $e30000),hl 
 	ld.sis (SMCLoadZ - $e30000),hl 
-	; translate object position
+	
+	ld ix,offx ; calculate M*<-128,-128,-128> for object offsets 
+	ld de,-128 
+	ld (ix),de 
+	ld (ix+2),de 
+	ld (ix+4),de 
+	call _matrixRow0Multiply
+	push hl 
+	call _matrixRow1Multiply
+	push hl
+	call _matrixRow2Multiply
+	pop de
+	pop bc 
+	ld (ix),bc 
+	ld (ix+2),de 
+	ld (ix+4),hl 
+	
+	lea ix,cx  ; M*camera position 
 	call _matrixRow0Multiply
 	ex de,hl
 	or a,a 
@@ -181,6 +223,11 @@ _setCameraPosition:
 tx: rb 3
 ty: rb 3
 tz: rb 3
+
+offx: rb 2
+offy: rb 2
+offz: rb 3
+
 ;---------------------------------------------------------
 _qdTransformVertices: 
 	push ix 
@@ -214,7 +261,7 @@ _qdTransformVertices:
 	ld hl,(ix+9) 
 	ld ix,(ix+3) 
 	ld de,1
-loop:
+.loop:
 	exx 
 	call _matrixRow0Multiply
 	push hl  
@@ -223,45 +270,29 @@ loop:
 	call _matrixRow2Multiply
 	pop de 
 	pop bc 
-	ld (iy+0),bc 
-	ld (iy+2),de 
-	ld (iy+4),l 
-	ld (iy+5),h 
-	lea ix,ix+3 
-	lea iy,iy+6 
+	ld (iy+0),c 
+	ld (iy+1),e 
+	ld (iy+2),l  
+	lea ix,ix+3 ; next vertex 
+	lea iy,iy+3 
 	exx 
 	or a,a 
 	sbc hl,de
-	jr nz,loop
+	jr nz,.loop
 	pop ix
 	ret 
 
-;---------------------------------------------------------
-; projects sprite vertices
-_projectSprites: 
-	push iy 
-	push bc 
-	ld a,8
-	ld (SMCSizeVertex),a ; billboard size different then regular vertex
-	
-	ld ix,_qdActiveSprite 	
-	ld iy,_qdVertexCache
-	or a,a 
-	sbc hl,hl 
-	ld a,(_qdNumSprites)
-	ld l,a
-	ld de,1
-	jp projloop
-	
+;---------------------------------------------------------	
+
+	; iy = object pointer
 _projectVertices: 
 	push iy 
 	push bc
 	
-	ld a,3 
-	ld (SMCSizeVertex),a
 	lea ix,iy+0
 	ld iy,_qdCameraMatrix
 	
+	; load position multiply routine
 	ld de,mulRow
 	ld hl,mulRowPosition_src
 	ld bc,mulRowPosition_len 
@@ -274,21 +305,32 @@ _projectVertices:
 	ld.sis (SMCLoadX - $e30000),hl
 	ld.sis (SMCLoadY - $e30000),hl
 	ld.sis (SMCLoadZ - $e30000),hl
+	
+	; transform object position 
 	call _matrixRow0Multiply
-	ld de,(tx) 
+	ld de,(tx)
+	ld bc,(offx) 
 	add hl,de
+	add hl,bc
 	ld.sis (SMCLoadX - $e30000),hl 
+	
 	call _matrixRow1Multiply
 	ld de,(ty)
+	ld bc,(offy)
 	add hl,de
+	add hl,bc
 	ld.sis (SMCLoadY - $e30000),hl
+	
 	call _matrixRow2Multiply
 	ld de,(tz)
+	ld bc,(offz)
 	add hl,de
+	add hl,bc
 	ld.sis (SMCLoadZ - $e30000),hl
 	ld a,$d0
 	ld mb,a 
 	
+	; load vertex multiply routine
 	ld de,mulRow
 	ld hl,mulRowVertex_src
 	ld bc,mulRowVertex_len
@@ -308,16 +350,19 @@ _matrixRoutine:
 
 projloop: 	
 	exx 
-	
+	; get z'
 	call _matrixRow2Multiply
 	ld (depth),l 
-
+	
+	xor a,a 
+	cp a,l 
+	jq Z,.earlyZ
 	bit 7,l 
-	jq Z,skipEarlyZ
-earlyZ:
+	jq Z,.skipEarlyZ
+.earlyZ: 
 	ld (outcode),$FF ; out of range 
-	jq skipVert
-skipEarlyZ: 	
+	jq .skipVert
+.skipEarlyZ: 	
 	dec l 
 	add hl,hl  
 	ld de,_ZinvLUT
@@ -328,29 +373,8 @@ skipEarlyZ:
 	
 	; height/2 - y'*f/z'
 	call _matrixRow1Multiply 
-	ex de,hl 
 	pop bc 
-	;de*bc 
-	ld h,e 
-	ld l,c 
-	mlt hl 
-	ld a,h 
-	ld h,d 
-	ld l,b 
-	mlt hl  
-	bit 7,d 
-	jr Z,$+5
-	or a,a 
-	sbc hl,bc 
-	ld h,l
-	ld l,a 
-	ld a,b 
-	ld b,d 
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc
+	call mulHLBC
 	ex de,hl
 	ld hl,canvas_height/2
 	or a,a 
@@ -364,12 +388,12 @@ skipEarlyZ:
 	; out of bounds = y<0 or y>255 
 	xor a,a 
 	cp a,h 
-	jr Z,topY
+	jr Z,.topY
 	pop bc 
 	ld (outcode),$FF 
-	jr skipVert
+	jr .skipVert
 	; top outcode  
-topY: 
+.topY: 
 	ld h,a 
 	ld a,l
 	cp a,canvas_offset 
@@ -384,28 +408,8 @@ topY:
 	call _matrixRow0Multiply
 	; 256/2 + x'*f/z'
 	;de*bc
-	ex de,hl
 	pop bc 
-	ld h,e 
-	ld l,c 
-	mlt hl 
-	ld a,h 
-	ld h,d 
-	ld l,b 
-	mlt hl  
-	bit 7,d 
-	jr Z,$+5
-	or a,a 
-	sbc hl,bc 
-	ld h,l
-	ld l,a 
-	ld a,b 
-	ld b,d 
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc
+	call mulHLBC
 	ld de,256/2
 	add hl,de
 	ld (xs),l
@@ -414,11 +418,11 @@ topY:
 	; out of bounds = x<0 or x>255 
 	xor a,a 
 	cp a,h 
-	jr Z,leftX
+	jr Z,.leftX
 	ld (outcode),$FF 
-	jr skipVert
+	jr .skipVert
 	; left outcode 
-leftX:
+.leftX:
 	ex af,af'	
 	ld h,a 
 	ld a,l
@@ -426,24 +430,185 @@ leftX:
 	rl h	; set if x less than 
 	; right outcode 
 	cp a,canvas_width+canvas_offset
-	ccf  
+	ccf  ; carry clear if x greater than, so invert carry
 	rl h 
 	
 	ld (outcode),h  
 	; copy UV for sprites
 	
-skipVert: 
+.skipVert: 
 	exx 
-	lea ix,ix+3 
-SMCSizeVertex:=$-1
-	lea iy,iy+8 
+	lea ix,ix+3 ; next vertex 
+	lea iy,iy+8 ; next cache entry  
 	or a,a 
-	sbc hl,de 
+	sbc hl,de 	; count-- 
 	jq nz,projloop 
 	
 	pop bc
 	pop iy
 	ret
+	
+;---------------------------------------------------------	
+; in: b = sprite count 
+_projectSprites: 
+	ld ix,_qdActiveSprite ; ix = pointer to current sprite 
+	ld iy,_qdVertexCache  ; iy = vertex cache pointer 
+	push bc 
+	ld c,b 
+spriteloop: 
+	exx 
+	; get z' 
+	call _matrixRow2Multiply
+	ld (sdepth),l 
+	; skip if z<=0
+	xor a,a 
+	cp a,l 
+	jq Z,.skipSprite
+	bit 7,l 
+	jq nz,.skipSprite
+	; fetch f/z 
+	dec l 
+	add hl,hl  
+	ld de,_ZinvLUT
+	add hl,de 
+	ld hl,(hl) ;hl = f/z 
+	push hl  
+	
+	call _matrixRow0Multiply
+	; 256/2 + x'*f/z'
+	;de*bc
+	pop bc 
+	push bc 
+	call mulHLBC
+	ld de,256/2
+	add hl,de
+	
+	;xe = xs + w*f/z 
+	;xs -= (w*f/z)/2
+	pop bc ; bc = f/z 
+	push bc 
+	push hl ; push xs 
+	ld a,(spriteHW)
+	; bc*a 
+	ld h,c 
+	ld l,a 
+	mlt hl 
+	ld l,h 
+	ld h,0 
+	ld c,a 
+	mlt bc 
+	add hl,bc 
+	ex de,hl 
+	pop hl
+	add hl,de
+	; skip if xe < canvas_offset 
+	ld bc,canvas_offset
+	or a,a 
+	sbc.sis hl,bc 
+	jq m,.skipSpritePop
+	jq Z,.skipSpritePop
+	add hl,bc 
+	ld (sxe),hl 	
+	or a,a 
+	sbc hl,de 
+	or a,a 
+	sbc hl,de ;hl = xs - (w*f/z)/2 
+	; skip if xs >= width+offset 
+	ld de,canvas_width+canvas_offset-1 
+	or a,a 
+	sbc hl,de 
+	bit 7,h 
+	jq Z,.skipSpritePop
+	add hl,de 
+	ld (sxs),l
+	ld (sxs+1),h
+	
+
+	; ys = height/2 - y' 
+	call _matrixRow1Multiply 
+	pop bc 
+	push bc ; bc = f/z
+	call mulHLBC
+	ex de,hl
+	ld hl,canvas_height/2
+	or a,a 
+	sbc hl,de
+	
+	;ye = ys + h*f/z 
+	;ys -= (h*f/z)/2
+	pop bc ; bc = f/z 
+	push hl ; push ys 
+	ld a,(spriteHH)
+	; bc*a 
+	ld h,c 
+	ld l,a 
+	mlt hl 
+	ld l,h 
+	ld h,0 
+	ld c,a 
+	mlt bc 
+	add hl,bc 
+	ex de,hl 
+	pop hl
+	add hl,de
+	; skip if ye <= 0 
+	bit 7,h
+	jq nz,.skipSprite
+	ld (sye),l 	
+	ld (sye+1),h 	
+	or a,a 
+	sbc hl,de 
+	or a,a 
+	sbc hl,de ;hl = ys - (h*f/z)/2 
+	; skip if ys >= height
+	ld de,canvas_height
+	or a,a 
+	sbc hl,de 
+	bit 7,h 
+	jq Z,.skipSprite
+	add hl,de 
+	ld (sys),l 
+	ld (sys+1),h 
+	
+.next: 	
+	lea ix,ix+19 ; next sprite 
+	exx 
+	dec c  ; count-- 
+	jq nz,spriteloop
+	pop bc 
+	ret 
+	
+.skipSpritePop: 
+	pop hl 
+.skipSprite: 
+	ld (sdepth),$FF 
+	jq .next 
+	
+
+	
+	; hl = de*bc (bc is fixed point with bc>0)
+mulHLBC:
+	ex de,hl
+	ld h,d
+	ld l,b 
+	mlt hl 
+	ld a,l 
+	bit 7,d 
+	jr Z,$+3 
+	sub a,c  
+	ld h,e 
+	ld l,c 
+	mlt hl
+	ld l,h  
+	ld h,a 
+	ld a,b 
+	ld b,d  
+	ld d,a 
+	mlt de 
+	mlt bc 
+	add hl,de 
+	add hl,bc
+	ret 
 	
 ;---------------------------------------------------------
 _matrixRow0Multiply:

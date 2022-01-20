@@ -43,6 +43,11 @@ cy equ iy+14
 cx equ iy+16
 next equ iy+18
 
+xlen equ iy+2 
+ylen equ iy+3 
+ustart equ iy+6
+vstart equ iy+9
+delta equ iy+12
 
 ;shader macro definitions 
 
@@ -72,6 +77,48 @@ shaderTable:
 	shaderEntry bilerp32_flat,8
 	shaderEntry bilerp32_flat_clipped,8
 	
+	
+;-----------------------------------------
+; bc = texture 
+; de = canvas 
+; hl = u 
+; spl = delta 
+; b' = xlen / 2 
+; c' = ylen 
+; hl' = v 
+; ixh = x0 
+; ixl = xlen / 2 
+; iy = ustart 
+; Sprite Shader
+spriteRoutine:
+.yloop: 
+	exx 
+	ld b,a  
+	inc d 
+	ld e,ixh 
+	lea hl,iy+0
+	exx 
+.xloop:
+	exx 
+repeat 2 
+	ld c,h
+	ld a,(bc)
+	or a,a 
+	jr Z,$+3  
+	ld (de),a 
+	inc e 
+	add hl,sp 
+end repeat 	
+	exx 
+	djnz .xloop
+	ld b,ixl 
+	add hl,sp  
+	ld a,h 
+	dec c  
+	jr nz,.yloop 
+	jp exitShader 
+endShader spriteRoutine 
+	
 
 ;-----------------------------------
 ; register state after below, consistent for all shaders
@@ -80,21 +127,21 @@ shaderTable:
 ; b = u counter 
 ; c = v counter 
 ; hl' = x 
-; de' = screen pointer 
+; de' = canvas pointer 
 ; bc' = texture pointer 
 ; spl = dx 
 ; sps = yi 
-; iyh = u0 
-; iyl = light
 ; ix = xi 
-
+; i = light 
 
 ; iy = cached face pointer
 _callShader: 
 	; load shader to $E10010 
 	ld l,(shader) 
 	ld a,$FF 
-_currentShader:=$-1 
+_currentShader:=$-1
+	bit 7,l ; sprite shader = $80+
+	jq nz,spriteShader 
 	sub a,l 
 	ld h,5 
 	mlt hl
@@ -189,6 +236,51 @@ dispatch:
 	exx 
 	jp shaderUloop
 	
+	
+; register state after the following: 
+; bc = texture 
+; de = canvas 
+; hl = u 
+; spl = delta 
+; b' = xlen / 2 
+; c' = ylen 
+; hl' = v 
+; ixh = x0 
+; ixl = xlen / 2 
+; iy = u0 
+spriteShader: 
+	cp a,l 
+	jq Z,.skipLoad 
+	ld a,l 
+	ld (_currentShader),a 
+	ld hl,spriteRoutine
+	ld de,shaderUloop
+	ld bc,spriteRoutine.len 
+	ldir 
+.skipLoad:
+	ld (SMCloadSP),sp 
+	ld bc,$D40000
+	ld de,$D40000 
+	ld d,(y0) 
+	dec d
+	ld e,(x0)
+	ld ixh,e 
+	ld hl,(delta)
+	ld sp,hl 
+	exx 
+	ld de,(ustart) 
+	ld b,(xlen)
+	srl b  
+	ld ixl,b 
+	ld c,(ylen) 
+	ld hl,(vstart)
+	ld a,$80 
+	add a,h 
+	ld h,a 
+	ld iyl,e 
+	ld iyh,d 
+	jp shaderUloop
+	
 ;------------------------------
 
 virtual at $E30880
@@ -226,6 +318,7 @@ SMCloadCY:=$-3
 	ld.sis sp,hl 
 	dec c 
 	jp nz,shaderUloop 
+exitShader:
 	ld sp,0 
 SMCloadSP:=$-3 
 	ret 

@@ -29,20 +29,24 @@ int main(void)
 	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
-	//qdSprite spr = {0,20,0,16,0}; 
+	qdSprite spr = {0,20,-30,0,0,8,8}; 
+	qdSprite spr2 = {50,20,-30,16,0,8,8}; 
 
-	qdCameraMatrix.x = 128;
-	qdCameraMatrix.y = 132;
-	qdCameraMatrix.z = 150;
+	qdCameraMatrix.x = 0;
+	qdCameraMatrix.y = 4;
+	qdCameraMatrix.z = 22;
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);
-
+	gfx_SetPalette(global_palette,32,0);
+	
 	qdActiveObject[0] = &grid;
+	//qdActiveObject[1] = &zelda;
 	qdNumObjects = 1;
-	gfx_SetPalette(global_palette,32,0); 
-	/* qdActiveSprite[0] = spr;
-	qdNumSprites = 1; */
+	qdActiveSprite[0] = spr;
+	qdActiveSprite[1] = spr2; 
+	
+	qdNumSprites = 2;
 	
 	gfx_SetColor(0xFF); 
 	
@@ -85,24 +89,23 @@ int main(void)
 			ay-=3; 
 		} 
 		
-		
+		/*
 		if(kb_IsDown(kb_Key5)) { 
 		// TODO: figure out switch statements for non integers 
-			if(qdActiveObject[0] == &grid)
-				qdActiveObject[0] = &zelda;
-			else if(qdActiveObject[0] == &zelda)
-				qdActiveObject[0] = &monkey;
+			if(qdActiveObject[1] == &zelda)
+				qdActiveObject[1] = &monkey;
 			else 
-				qdActiveObject[0] = &grid; 
+				qdActiveObject[1] = &zelda; 
 		}  
-	
-		qdClearCanvas();
+		*/ 
+		
 		startTimer(); 
 		qdRender(); 
 		stopTimer();
 		int time = getTimer(); 
-		qdBlitCanvas();
+		
 		gfx_Wait();
+		qdBlitCanvas();
 		
 		gfx_SetTextXY(0,0);
 		gfx_PrintUInt(time,8);
@@ -113,7 +116,6 @@ int main(void)
 		gfx_PrintChar(' '); 
 		gfx_PrintUInt(az,3);
 
-		kb_Scan(); 
 	} 
 		
 	qdClose();

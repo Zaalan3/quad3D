@@ -165,7 +165,7 @@ spriteloop:
 	ld de,canvas_offset 
 	or a,a 
 	sbc.sis hl,de 
-	call c,correctU  ; correct ustart and x0 if sxs<offset 
+	call m,correctU  ; correct ustart and x0 if sxs<offset 
 	
 	;xlen = min(width+offset,sxe) - sxs 
 	ld hl,(sxe) 

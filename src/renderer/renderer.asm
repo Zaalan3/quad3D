@@ -1,6 +1,10 @@
 public _qdInit
 public _qdClose
 
+public _qdVertexCache 
+public _qdFaceBucket
+public _qdFaceCache 
+
 extern _gfx_Begin 
 extern _gfx_ZeroScreen 
 extern _gfx_SwapDraw 
@@ -21,6 +25,11 @@ extern _shaderRoutine_src
 extern _matrixRoutine
 extern _matrixRoutine_src
 extern _matrixRoutine_len
+
+
+_qdVertexCache:=$D40000
+_qdFaceBucket:=$D50000
+_qdFaceCache:=$D50400
 
 _qdInit: 
 	; initialize screen 

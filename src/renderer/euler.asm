@@ -36,34 +36,40 @@ _qdEulerToMatrix:
 	ld iy,(matrix) 
 	
 	ld l,(ay) 
+	ld a,l 
+	add a,64 
+	ex af,af' 
 	call _fixedSin
-	ld (s1),hl 
-	ld a,64 
-	add a,(ay) 
+	ld (s1),hl
+	ex af,af' 
 	ld l,a 
 	call _fixedSin 
 	ld (c1),hl 
 	
-	ld l,(ax) 
+	ld l,(ax)
+	ld a,l 
+	add a,64 
+	ex af,af'
 	call _fixedSin
 	ld (s2),hl 
-	ld a,64 
-	add a,(ax) 
+	ld (m21),hl
+	ex af,af' 
 	ld l,a 
 	call _fixedSin 
 	ld (c2),hl 
 	
-	ld l,(az) 
+	ld l,(az)
+	ld a,l 
+	add a,64 
+	ex af,af'
 	call _fixedSin
 	ld (s3),hl 
-	ld a,64 
-	add a,(az) 
+	ex af,af' 
 	ld l,a 
 	call _fixedSin 
 	ld (c3),hl 
 	
-	ld hl,(c1)
-	ld bc,(c3) 
+	ld bc,(c1) 
 	call _fixedHLmulBC
 	push hl 
 	ld hl,(s1) 
@@ -139,11 +145,9 @@ _qdEulerToMatrix:
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
-	ld (m20),hl
+	ld (m20),l 
+	ld (m20+1),h
 
-	ld hl,(s2) 
-	ld (m21),hl 
-	
 	ld hl,(c2) 
 	ld bc,(c1) 
 	call _fixedHLmulBC 
@@ -153,5 +157,3 @@ _qdEulerToMatrix:
 	ld sp,ix 
 	pop ix 
 	ret
-	
-	

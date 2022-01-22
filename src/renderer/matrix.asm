@@ -483,10 +483,12 @@ spriteloop:
 	ld de,256/2
 	add hl,de
 	
-	;xe = xs + w*f/z 
-	;xs -= (w*f/z)/2
-	pop bc ; bc = f/z 
+	;xe = xs + w*f/2z 
+	;xs -= (w*f/2z)/2
+	pop bc ; bc = f/z * 1/2 
 	push bc 
+	srl b 
+	rr c 
 	push hl ; push xs 
 	ld a,(spriteHW)
 	; bc*a 
@@ -534,9 +536,11 @@ spriteloop:
 	or a,a 
 	sbc hl,de
 	
-	;ye = ys + h*f/z 
-	;ys -= (h*f/z)/2
-	pop bc ; bc = f/z 
+	;ye = ys + h*f/2z 
+	;ys -= (h*f/2z)/2
+	pop bc ; bc = f/z * 1/2 
+	srl b 
+	rr c
 	push hl ; push ys 
 	ld a,(spriteHH)
 	; bc*a 
@@ -637,7 +641,7 @@ SMCLoadZ:= $ - 2
 SMCLoadM20:= $ - 3	
 	jp mulRow
 	
-assert $<$E30B30
+assert $<$E30B00
 load _matrixroutine_data: $-$$ from $$
 _matrixRoutine_len := $-$$
 end virtual

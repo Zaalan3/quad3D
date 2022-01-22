@@ -136,14 +136,14 @@ processSprites:
 	call _projectSprites
 	ld ix,_qdActiveSprite ; ix = pointer to sprite
 	ld iy,_qdFaceCache 
-spriteloop: 
+.loop: 
 	exx 
 	; skip if sprite depth = $FF 
 	ld a,(sdepth) 
 	cp a,$FF
-	jq Z,skipSprite 
+	jq Z,.skip 
 	
-	;delta = 2*z 
+	
 	or a,a 
 	sbc hl,hl 
 	ld h,(spriteU) 
@@ -152,10 +152,12 @@ spriteloop:
 	ld (tvstart),hl
 	ld h,l 
 	
+	;delta = 4*z 
 	ld l,a 
 	add hl,hl
-	ld (tdelta),hl 
 	add hl,hl 
+	ld (tdelta),hl 
+	dec hl 
 	push hl ; depth bucket 
 	
 	ld (tshader),$80 ; sprite shader
@@ -174,11 +176,11 @@ spriteloop:
 	ld a,l 
 	sub a,(tx0) 
 	
-	cp a,1 
-	jq nz,.skipOnePixel
+	cp a,2 
+	jq nc,.skipOnePixel
 .onePixel: 
 	pop de 
-	jq skipSprite
+	jq .skip
 .skipOnePixel: 
 	ld (txlen),a 
 	
@@ -194,7 +196,13 @@ spriteloop:
 	call minHLDE 
 	ld a,l 
 	sub a,(ty0) 
+	jq nz,.skipZeroLines 
+.zeroLines:
+	pop de 
+	jq .skip 
+.skipZeroLines: 
 	ld (tylen),a 
+	
 	
 	pop hl ; hl = depth bucket
 	push ix 
@@ -228,11 +236,11 @@ spriteloop:
 	
 	pop ix 
 	lea iy,iy+20 ; next face cache entry 
-skipSprite:
+.skip:
 	exx
 	lea ix,ix+19 ; next sprite 
 	dec b 
-	jq nz,spriteloop
+	jq nz,.loop
 	
 	ld ix,$E30B80
 	ld (cachePointer),iy
@@ -521,9 +529,9 @@ renderFaces:
 	
 	ld de,(ix+0)
 	push ix-2 
-bucketloop:
+.loop:
 	bit 7,d 
-	jr nz,skipbucket
+	jr nz,.skip
 	; de*20
 	ld h,d 
 	ld l,e 
@@ -543,9 +551,9 @@ bucketloop:
 	push de 
 	call _callShader 
 	pop de 
-	jq bucketloop
+	jq .loop
 
-skipbucket:
+.skip:
 	
 	pop ix 
 	pop hl 
@@ -556,7 +564,7 @@ skipbucket:
 	sbc hl,bc 
 	push hl 
 	pea ix-2 
-	jq p,bucketloop
+	jq p,.loop
 	
 	pop hl
 	pop hl

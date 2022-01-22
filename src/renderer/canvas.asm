@@ -2,10 +2,6 @@
 public _qdBlitCanvas
 public _qdClearCanvas
 
-public _qdVertexCache 
-public _qdFaceBucket
-public _qdFaceCache 
-
 public canvas
 public canvas_width
 public canvas_height
@@ -17,10 +13,6 @@ canvas_height:=120
 canvas_offset:=48
 
 screen:=$D52C00 
-
-_qdVertexCache:=$D40000
-_qdFaceBucket:=$D50000
-_qdFaceCache:=$D50400
 
 gfxFillScreenFastCode:=$E30800 
 
@@ -45,7 +37,7 @@ _qdBlitCanvas:
 	ld hl,screen + 60*320 + 80 
 	ld de,320
 	ld b,canvas_height
-bloop: 
+.loop: 
 	push hl 
 	add hl,de 
 	exx 
@@ -55,5 +47,5 @@ bloop:
 	inc h 
 	ld l,canvas_offset
 	exx 
-	djnz bloop 
+	djnz .loop 
 	ret 

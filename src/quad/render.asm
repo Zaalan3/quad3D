@@ -257,8 +257,7 @@ processObjects:
 	add hl,sp 
 	ld (StoreSP),hl
 objectloop: 
-	pea iy+3 
-	ld iy,(iy)
+	pea iy+16 
 	call _projectVertices
 cacheFaces: 
 	ld de,(iy+8) ;face count

@@ -1,11 +1,11 @@
 //Model from grid.obj
-#include "renderer/renderer.h" 
+#include "quad/quad.h" 
 
 
-static qdVertex verts[45];
-static qdFace faces[32];
+static const qdVertex verts[45];
+static const qdFace faces[32];
 qdObject grid = {0,0,0,45,32,verts,faces};
-static qdFace faces[32] = { 
+static const qdFace faces[32] = { 
 	{SHADER_TEXTURED,0,0,0,0,1,10,9},
 	{SHADER_TEXTURED,0,0,0,1,2,11,10},
 	{SHADER_TEXTURED,0,0,0,2,3,12,11},
@@ -39,7 +39,7 @@ static qdFace faces[32] = {
 	{SHADER_TEXTURED,0,0,0,33,34,43,42},
 	{SHADER_TEXTURED,0,0,0,34,35,44,43}
 };
-static qdVertex verts[45] = { 
+static const qdVertex verts[45] = { 
 	{96,128,128},
 	{104,128,128},
 	{112,128,128},

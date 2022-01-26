@@ -12,7 +12,7 @@
 #include <graphx.h>
 #include <keypadc.h>
 
-#include "renderer/renderer.h" 
+#include "quad/quad.h" 
 #include "gfx/gfx.h"
 
 extern qdObject grid;
@@ -30,7 +30,8 @@ int main(void)
 	uint8_t ax = 0; 
 	uint8_t az = 0;
 	qdSprite spr = {0,20,-30,0,0,8,8}; 
-	qdSprite spr2 = {50,20,-30,16,0,8,8}; 
+	qdSprite spr2 = {20,20,-30,16,0,8,8}; 
+	qdObject* currentModel = &grid; 
 
 	qdCameraMatrix.x = 0;
 	qdCameraMatrix.y = 4;
@@ -40,8 +41,7 @@ int main(void)
 	loadTextureMapCompressed(tileset_compressed);
 	gfx_SetPalette(global_palette,32,0);
 	
-	qdActiveObject[0] = &grid;
-	//qdActiveObject[1] = &zelda;
+	qdActiveObject[0] = grid;
 	qdNumObjects = 1;
 	qdActiveSprite[0] = spr;
 	qdActiveSprite[1] = spr2; 
@@ -50,6 +50,7 @@ int main(void)
 	
 	gfx_SetColor(0xFF); 
 	
+	// white box to show bounds of rendering area 
 	gfx_HorizLine(80,59,160);
 	gfx_HorizLine(80,180,160);
 	gfx_VertLine(79,60,120);
@@ -60,7 +61,7 @@ int main(void)
 	gfx_SetColor(0xFF);
 	
 	
-	
+	// model showcase loop 
 	kb_SetMode(MODE_3_CONTINUOUS);
 	while(!kb_IsDown(kb_KeyClear)) { 
 		qdSetCameraAngle(ax,ay,az);
@@ -89,15 +90,23 @@ int main(void)
 			ay-=3; 
 		} 
 		
-		/*
+		
 		if(kb_IsDown(kb_Key5)) { 
-		// TODO: figure out switch statements for non integers 
-			if(qdActiveObject[1] == &zelda)
-				qdActiveObject[1] = &monkey;
-			else 
-				qdActiveObject[1] = &zelda; 
+			qdNumSprites = 0;
+			
+			if(currentModel == &grid) { 
+				qdActiveObject[0] = zelda;
+				currentModel = &zelda;
+			} else if(currentModel == &zelda) { 
+				qdActiveObject[0] = monkey;
+				currentModel = &monkey;	
+			} else { 
+				qdActiveObject[0] = grid;
+				currentModel = &grid;
+				qdNumSprites = 2; 
+			} 
 		}  
-		*/ 
+
 		
 		startTimer(); 
 		qdRender(); 

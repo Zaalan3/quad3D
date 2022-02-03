@@ -114,7 +114,7 @@ _qdRender:
 	ld hl,_qdFaceBucket
 	ld de,_qdFaceBucket+1 
 	ld (hl),$FF 
-	ld bc,1024 
+	ld bc,2047
 	ldir 
 	; init variables 
 	ld (numFaces),bc 
@@ -406,7 +406,7 @@ faceloop:
 	ld e,(depth3) 
 	add hl,de 
 		
-	ld de,512 
+	ld de,1023 
 	or a,a 
 	sbc hl,de 
 	jq p,loadFacePointer

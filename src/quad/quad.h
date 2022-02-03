@@ -27,12 +27,12 @@ extern qdSprite qdActiveSprite[64];
 
 // visible faces cache
 // 10 kb
-extern struct qd_face_cached qdFaceCache[512]; 
+extern volatile struct qd_face_cached qdFaceCache[512]; 
 
 // face bucket linked lists
 // stores indices for the first face at each distance
 // 2 kb 
-extern uint16_t qdFaceBucket[1024];
+extern volatile uint16_t qdFaceBucket[1024];
 
 // initializes renderer 
 void qdInit(void); 

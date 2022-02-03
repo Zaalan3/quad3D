@@ -264,14 +264,10 @@ _qdTransformVertices:
 .loop:
 	exx 
 	call _matrixRow0Multiply
-	push hl  
+	ld (iy+0),l  
 	call _matrixRow1Multiply
-	push hl  
+	ld (iy+1),l 
 	call _matrixRow2Multiply
-	pop de 
-	pop bc 
-	ld (iy+0),c 
-	ld (iy+1),e 
 	ld (iy+2),l  
 	lea ix,ix+3 ; next vertex 
 	lea iy,iy+3 
@@ -357,7 +353,7 @@ projloop:
 	xor a,a 
 	cp a,l 
 	jq Z,.earlyZ
-	bit 7,l 
+	cp a,h  
 	jq Z,.skipEarlyZ
 .earlyZ: 
 	ld (outcode),$FF ; out of range 
@@ -464,7 +460,7 @@ spriteloop:
 	xor a,a 
 	cp a,l 
 	jq Z,.skipSprite
-	bit 7,l 
+	cp a,h  
 	jq nz,.skipSprite
 	; fetch f/z 
 	dec l 

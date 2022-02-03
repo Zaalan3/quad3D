@@ -19,11 +19,6 @@ extern qdObject grid;
 extern qdObject monkey;  
 extern qdObject zelda;  
 
-#define startTimer() timer_1_Counter = 0; \
-					timer_Control = TIMER1_ENABLE|TIMER1_CPU|TIMER1_UP;
-#define stopTimer() timer_Control = TIMER1_DISABLE; 
-#define getTimer() timer_1_Counter
-
 int main(void)
 {
 	uint8_t ay = 128;
@@ -107,11 +102,11 @@ int main(void)
 			} 
 		}  
 
-		
-		startTimer(); 
+		timer_Set(1,0); 
+		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP); 
 		qdRender(); 
-		stopTimer();
-		int time = getTimer(); 
+		timer_Disable(1); 
+		int time = timer_Get(1); 
 		
 		gfx_Wait();
 		qdBlitCanvas();

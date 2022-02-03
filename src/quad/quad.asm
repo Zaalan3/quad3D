@@ -5,6 +5,10 @@ public _qdVertexCache
 public _qdFaceBucket
 public _qdFaceCache 
 
+public _qdActiveObject
+public _qdActiveSprite
+
+
 extern _gfx_Begin 
 extern _gfx_ZeroScreen 
 extern _gfx_SwapDraw 
@@ -15,9 +19,6 @@ extern port_setup
 extern port_privilege_unlock
 extern port_privilege_lock
 
-extern _qdNumObjects
-extern _qdNumSprites
-
 extern _shaderRoutine
 extern _shaderRoutine_len
 extern _shaderRoutine_src
@@ -26,10 +27,18 @@ extern _matrixRoutine
 extern _matrixRoutine_src
 extern _matrixRoutine_len
 
+extern _qdNumObjects
+extern _qdNumSprites 
+
+;variable defines 
 
 _qdVertexCache:=$D40000
-_qdFaceBucket:=$D50000
-_qdFaceCache:=$D50400
+_qdFaceBucket:=$D40000 + 256*120
+_qdFaceCache:=$D50900
+
+_qdActiveObject:=$D50000 
+_qdActiveSprite:=$D50400
+
 
 _qdInit: 
 	; initialize screen 

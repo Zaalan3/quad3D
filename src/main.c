@@ -29,8 +29,8 @@ int main(void)
 	qdObject* currentModel = &grid; 
 
 	qdCameraMatrix.x = 0;
-	qdCameraMatrix.y = 4;
-	qdCameraMatrix.z = 22;
+	qdCameraMatrix.y = 8;
+	qdCameraMatrix.z = 60;
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);
@@ -40,9 +40,8 @@ int main(void)
 	qdNumObjects = 1;
 	qdActiveSprite[0] = spr;
 	qdActiveSprite[1] = spr2; 
-	
 	qdNumSprites = 2;
-	
+		
 	gfx_SetColor(0xFF); 
 	
 	// white box to show bounds of rendering area 

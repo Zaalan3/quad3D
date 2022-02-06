@@ -1,10 +1,10 @@
 //Model from monkey.obj
 #include "quad/quad.h" 
 
-static const qdVertex verts[507];
-static const qdFace faces[500];
+static qdVertex verts[507];
+static qdFace faces[500];
 qdObject monkey = {0,0,0,507,500,verts,faces};
-static const qdFace faces[500] = { 
+static  qdFace faces[500] = { 
 	{SHADER_TEXTURED,0,0,0,46,0,2,44},
 	{SHADER_TEXTURED,0,0,0,3,1,47,45},
 	{SHADER_TEXTURED,0,0,0,44,2,4,42},
@@ -506,7 +506,7 @@ static const qdFace faces[500] = {
 	{SHADER_TEXTURED,0,0,0,319,321,503,389},
 	{SHADER_TEXTURED,0,0,0,504,322,320,390}
 };
-static const qdVertex verts[507] = { 
+static qdVertex verts[507] = { 
 	{135,131,140},
 	{121,131,140},
 	{136,130,139},

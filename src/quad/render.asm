@@ -196,7 +196,9 @@ processSprites:
 	call minHLDE 
 	ld a,l 
 	sub a,(ty0) 
-	jq nz,.skipZeroLines 
+	
+	cp a,2
+	jq nc,.skipZeroLines 
 .zeroLines:
 	pop de 
 	jq .skip 
@@ -384,13 +386,27 @@ faceloop:
 	add hl,sp 
 	; skip if area >= 0 
 	bit 7,h 
-	jq z,loadFacePointer 
+	jq Z,loadFacePointer 
 	
-	; if area<-512  then use chunky shader
-	ld de,512 
-	add.sis hl,de 
-	jq c,$+6 
-	set 1,(tshader)
+	
+	ld de,128  
+	ld a,(tshader) 
+	; if area>-128  then use half size shader
+	add hl,de 
+	bit 7,h 
+	jq nz,.skipHalf
+	set 2,a 
+.skipHalf: 
+	add hl,de
+	add hl,de
+	; if area<-512  then use double pixel shader
+	add hl,de
+	add hl,de 
+	bit 7,h 
+	jq Z,.skipChunky
+	set 1,a 
+.skipChunky: 
+	ld (tshader),a 
 	
 	; find sum of distances (8.2 average)  
 	or a,a 
@@ -444,6 +460,7 @@ faceloop:
 	ld a,(y0) 
 	ld (ty0),a
 	
+	ld a,(tshader)
 	; cy = y1 - y0 
 	ld hl,(y1) 
 	ld b,h 
@@ -451,19 +468,40 @@ faceloop:
 	ld de,(y0)
 	or a,a 
 	sbc hl,de 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	bit 2,a 
+	jr Z,$+3
+	add hl,hl 
 	ld (tcy),hl 
+	
 	; by = y3 - y0 
 	ld hl,(y3) 
 	or a,a 
 	sbc hl,de 
+	ld d,h  
+	ld e,l 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	bit 2,a 
+	jr Z,$+3
+	add hl,hl 
 	ld (tby),hl 
+	
 	; ay = y0 - y1 - y3 + y2 = y2 - by - y1 
-	ex de,hl 
 	ld hl,(y2) 
 	or a,a 
 	sbc hl,de 
 	or a,a 
 	sbc hl,bc 
+	bit 2,a 
+	jr Z,$+4
+	add hl,hl 
+	add hl,hl 
 	ld (tay),hl
 	
 	;cx = x1 - x0 
@@ -473,16 +511,33 @@ faceloop:
 	ld de,(x0)
 	or a,a 
 	sbc hl,de 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	bit 2,a 
+	jr Z,$+3
+	add hl,hl
 	ld (tcx),l 
 	ld (tcx+1),h
+	
 	;bx = x3 - x0 
 	ld hl,(x3) 
 	or a,a 
-	sbc hl,de 
+	sbc hl,de
+	ld d,h  
+	ld e,l  
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	bit 2,a 
+	jr Z,$+3
+	add hl,hl
 	ld (tbx),l 
 	ld (tbx+1),h 
+	
 	; ax = x0 - x1 - x3 + x2 = x2 - bx - x1 
-	ex de,hl 
 	ld hl,(x2) 
 	or a,a 
 	sbc hl,de 
@@ -490,7 +545,10 @@ faceloop:
 	sbc hl,bc 
 	ld (tax),l
 	ld (tax+1),h 
-	
+	bit 2,a 
+	jr Z,$+4
+	add hl,hl 
+	add hl,hl 
 	
 	;next face cache entry
 	lea iy,iy+20 

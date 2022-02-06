@@ -13,17 +13,27 @@ extern bilerp32
 extern bilerp32.len
 extern bilerp32_clipped
 extern bilerp32_clipped.len
+extern bilerp8
+extern bilerp8.len 
+extern bilerp8_clipped
+extern bilerp8_clipped.len
 
-extern bilerp16_flat
-extern bilerp16_flat.len 
-extern bilerp16_flat_clipped
-extern bilerp16_flat_clipped.len
-extern bilerp32_flat
-extern bilerp32_flat.len
-extern bilerp32_flat_clipped
-extern bilerp32_flat_clipped.len
+extern flat16
+extern flat16.len 
+extern flat16_clipped
+extern flat16_clipped.len
+extern flat32
+extern flat32.len
+extern flat32_clipped
+extern flat32_clipped.len
+extern flat8
+extern flat8.len 
+extern flat8_clipped
+extern flat8_clipped.len
+
 
 public shaderVloop
+public shaderVloopIncB
 
 extern canvas_height
 
@@ -65,18 +75,29 @@ end macro
 
 ;-----------------------------------------
 ; Shader lookup table 
+; shader byte format: 
+; 0nnnnhdc 
+; n = shader type 
+; h = half size 
+; d = double pixels 
+; c = clipped/unclipped 
 
 shaderTable: 
 	shaderEntry bilerp16,4 
 	shaderEntry bilerp16_clipped,4
 	shaderEntry bilerp32,8 
 	shaderEntry bilerp32_clipped,8
+	shaderEntry bilerp8,2 
+	shaderEntry bilerp8_clipped,4
+	rb 10 
 
-	shaderEntry bilerp16_flat,4 
-	shaderEntry bilerp16_flat_clipped,4
-	shaderEntry bilerp32_flat,8
-	shaderEntry bilerp32_flat_clipped,8
-	
+	shaderEntry flat16,4 
+	shaderEntry flat16_clipped,4
+	shaderEntry flat32,8
+	shaderEntry flat32_clipped,8
+	shaderEntry flat8,2
+	shaderEntry flat8_clipped,2
+	rb 10 
 	
 ;-----------------------------------------
 ; bc = texture 
@@ -133,7 +154,6 @@ endShader spriteRoutine
 ; sps = yi 
 ; ix = xi 
 ; i = light 
-
 ; iy = cached face pointer
 _callShader: 
 	; load shader to $E10010 
@@ -172,41 +192,36 @@ cont:
 	; load variables and SMC bytes 
 	ld (SMCloadSP),sp	
 	ld c,16 
+	
 	ld b,a 		; b = u count
+	ld a,(shader) 
+	ld (_currentShader),a 
+	bit 2,a 
+	jr Z,$+4  
+	srl c 
 	
 	ld hl,(ax) 
 	ld (SMCloadAX),hl
-	ld hl,(ay) 
+	
+	ld hl,(ay)
 	ld (SMCloadAY),hl
 	
-	;fixed point conversion (256*n/16) = 16*n 
 	ld hl,(cx) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
 	ld (SMCloadCX),hl  
 	ld a,$d4 
 	ld (SMCloadCX+2),a 
+	ex af,af'
 	
 	ld hl,(cy) 
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
 	ld (SMCloadCY),hl 
 	
-	ld hl,(by)
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	ex de,hl ; de = dy
+	ld de,(by) ; de = dy
 	
 	ld h,(y0) 	;  sps = yi 
 	ld l,0 
 	ld.sis sp,hl
 	exx 
+	ex af,af' 
 	ld a,(x0) 	;ix = xi 
 	ld ixl,0 
 	ld ixh,a 
@@ -215,20 +230,16 @@ cont:
 	ld a,(v0) 
 	add a,b 
 	ld b,a 
-	ld c,(u0) 
+	ld a,(u0) 
+	ld c,a 
+	ld (SMCloadU0),a 
 	
 	ld de,$D40000	;de = screen ptr 
 	
 	ld hl,(bx) 	; spl = dx
-	add hl,hl
-	add hl,hl
-	add hl,hl
-	add hl,hl
 	ld sp,hl 
 	lea hl,ix+0
 	
-	ld a,(shader) 
-	ld (_currentShader),a
 	ld a,(light) 
 	ld i,a
 	
@@ -293,6 +304,10 @@ _shaderRoutine:
 ; y = yi 
 ; dy += ay 
 ; dx += ax 
+shaderVloopIncB: 
+	exx 
+	inc b
+	exx 	
 shaderVloop: 
 	exx 
 	ld de,0
@@ -300,9 +315,8 @@ SMCloadCX:=$-3
 	add ix,de 
 	lea hl,ix+0 
 	inc b	 ; v++ 
-	ld a,c 
-	sub a,16 ; reset to u0
-	ld c,a 
+	ld c,0 
+SMCloadU0:=$-1 
 	exx 
 	ld hl,0 
 SMCloadAY:=$-3 

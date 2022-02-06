@@ -11,7 +11,7 @@ typedef struct {
 } qdVertex; 
 
 #define	SHADER_TEXTURED 0
-#define SHADER_FLAT 4
+#define SHADER_FLAT 8
  
 // 12 bytes 
 typedef struct {

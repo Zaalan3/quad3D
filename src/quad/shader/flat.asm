@@ -1,5 +1,6 @@
 
 extern shaderVloop 
+extern shaderVloopIncB 
 extern canvas_height
 
 ;place at end of shader 
@@ -10,7 +11,7 @@ end macro
 
 
 ;-----------------------------------
-bilerp16_flat: 
+flat16: 
 repeat 4 
 	ld a,h 
 	exx 
@@ -22,18 +23,18 @@ repeat 4
 	exx 
 	add hl,de 
 end repeat 
-	djnz bilerp16_flat
+	djnz flat16
 	ld b,4
 	jp shaderVloop
-	endShader bilerp16_flat
+	endShader flat16
 
 ;-----------------------------------
-bilerp16_flat_clipped: 
+flat16_clipped: 
 repeat 4  
 	ld a,h 
 	exx 
 	ld d,a 
-	cp a,canvas_height-1 
+	cp a,canvas_height
 	jr nc,$+6 
 	ld e,h 
 	ld a,i 
@@ -42,14 +43,14 @@ repeat 4
 	exx 
 	add hl,de 
 end repeat  
-	djnz bilerp16_flat_clipped
+	djnz flat16_clipped
 	ld b,4
 	jp shaderVloop
-	endShader bilerp16_flat_clipped
+	endShader flat16_clipped
 
 
 ;-----------------------------------
-bilerp32_flat: 
+flat32: 
 repeat 2 
 	ld a,h 
 	exx 
@@ -67,13 +68,13 @@ repeat 2
 	exx 
 	add hl,de
 end repeat
-	djnz bilerp32_flat
+	djnz flat32
 	ld b,8
 	jp shaderVloop 
-	endShader bilerp32_flat
+	endShader flat32
 
 ;-----------------------------------
-bilerp32_flat_clipped: 
+flat32_clipped: 
 repeat 2 
 	ld a,h 
 	exx 
@@ -93,16 +94,58 @@ repeat 2
 	exx 
 	add hl,de
 end repeat
-	djnz bilerp32_flat_clipped
+	djnz flat32_clipped
 	ld b,8
 	jp shaderVloop 
-	endShader bilerp32_flat_clipped
+	endShader flat32_clipped
+	
+;-----------------------------------
+flat8: 
+repeat 4 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,i
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat 
+	djnz flat8
+	ld b,2 
+	jp shaderVloopIncB
+	endShader flat8	
+	
+;-----------------------------------
+flat8_clipped: 
+repeat 4 
+	ld a,h 
+	exx 
+	ld d,a 
+	cp a,canvas_height 
+	jr nc,$+6 
+	ld e,h 
+	ld a,i 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+end repeat 
+	djnz flat8_clipped
+	ld b,2 
+	jp shaderVloopIncB
+	endShader flat8_clipped	
 
-public bilerp16_flat
-public bilerp16_flat.len 
-public bilerp16_flat_clipped
-public bilerp16_flat_clipped.len
-public bilerp32_flat
-public bilerp32_flat.len
-public bilerp32_flat_clipped
-public bilerp32_flat_clipped.len
+public flat16
+public flat16.len 
+public flat16_clipped
+public flat16_clipped.len
+public flat32
+public flat32.len
+public flat32_clipped
+public flat32_clipped.len
+public flat8
+public flat8.len 
+public flat8_clipped
+public flat8_clipped.len

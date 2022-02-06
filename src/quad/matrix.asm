@@ -379,7 +379,7 @@ projloop:
 	ld (ys+1),h 
 	
 	;offset y value for easier bounds checking
-	ld de,canvas_offset
+	ld de,16
 	add hl,de 
 	; out of bounds = y<0 or y>255 
 	xor a,a 
@@ -392,10 +392,10 @@ projloop:
 .topY: 
 	ld h,a 
 	ld a,l
-	cp a,canvas_offset 
-	rl h	; set if x less than canvas offset 
+	cp a,16 
+	rl h	; set if x < 0 
 	; bottom outcode 
-	cp a,canvas_height+canvas_offset
+	cp a,canvas_height+15 
 	ccf 
 	ld a,h  
 	rla
@@ -425,7 +425,7 @@ projloop:
 	cp a,canvas_offset
 	rl h	; set if x less than 
 	; right outcode 
-	cp a,canvas_width+canvas_offset
+	cp a,canvas_width+canvas_offset 
 	ccf  ; carry clear if x greater than, so invert carry
 	rl h 
 	

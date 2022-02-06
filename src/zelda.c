@@ -1,11 +1,11 @@
 //Model from zelda.obj
 #include "quad/quad.h" 
 
-static const qdVertex verts[546];
-static const qdFace faces[254];
+static qdVertex verts[546];
+static qdFace faces[254];
 qdObject zelda = {0,0,0,546,254,verts,faces};
 
-static const qdFace faces[254] = { 
+static qdFace faces[254] = { 
 	{SHADER_TEXTURED,0,0,0,0,1,2,3},
 	{SHADER_TEXTURED,0,0,0,4,5,6,6},
 	{SHADER_TEXTURED,0,0,0,5,7,6,6},
@@ -261,7 +261,7 @@ static const qdFace faces[254] = {
 	{SHADER_TEXTURED,0,0,0,539,540,541,541},
 	{SHADER_TEXTURED,0,0,0,542,543,544,545}
 };
-static const qdVertex verts[546] = { 
+static qdVertex verts[546] = { 
 	{128,156,133},
 	{128,151,134},
 	{132,152,132},

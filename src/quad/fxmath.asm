@@ -186,7 +186,7 @@ _fixedHLmulBC:
 	ld h,d 
 	ld l,b 
 	mlt hl 
-	ld a,h 
+	ld a,l 
 	bit 7,d 
 	jr Z,$+3 
 	sub a,c

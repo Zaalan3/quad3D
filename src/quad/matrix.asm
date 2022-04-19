@@ -127,11 +127,10 @@ mulRowVertex_src:
 	ld l,c 
 	mlt hl 
 	ld l,h 
-	ld h,0 
+	xor a,a 
 	bit 7,d 
-	jr Z,$+10
-	ld a,c 
-	neg  
+	jr Z,$+3
+	sub a,c 
 	ld h,a 
 	ld e,c 
 	mlt de
@@ -148,9 +147,9 @@ mulRowVertex_len:= $ - mulRowVertex_src
 assert mulRowVertex_len <= 64	
 
 ;---------------------------------------------------------	
+; iy = matrix to load
 _setCameraPosition: 
 	push ix 
-	ld iy,_qdCameraMatrix
 	
 	;load smc bytes
 	ld de,mulRow
@@ -235,25 +234,23 @@ _qdTransformVertices:
 	add ix,sp 
 	
 	ld iy,(ix+0)
-	;load smc bytes
-	ld de,mulRow
-	ld hl,mulRowVertex_src
-	ld bc,mulRowVertex_len
-	ldir 
-	lea hl,m00
-	ld (SMCLoadM00),hl
-	lea hl,m10
-	ld (SMCLoadM10),hl
-	lea hl,m20
-	ld (SMCLoadM20),hl
-	
+	call _setCameraPosition
 	ld a,$e3 
 	ld mb,a 
-	or a,a
-	sbc hl,hl 
-	ld.sis (SMCLoadX - $e30000),hl 
-	ld.sis (SMCLoadY - $e30000),hl 
-	ld.sis (SMCLoadZ - $e30000),hl
+	
+	ld de,128 
+	ld hl,(tx) 
+	add hl,de 
+	ld.sis (SMCLoadX - $e30000),hl
+	
+	ld hl,(ty) 
+	add hl,de 
+	ld.sis (SMCLoadX - $e30000),hl
+	
+	ld hl,(tz) 
+	add hl,de 
+	ld.sis (SMCLoadX - $e30000),hl
+	
 	ld a,$d0
 	ld mb,a 
 	

@@ -29,18 +29,18 @@ int main(void)
 	qdObject* currentModel = &grid; 
 
 	qdCameraMatrix.x = 0;
-	qdCameraMatrix.y = 8;
-	qdCameraMatrix.z = 60;
+	qdCameraMatrix.y = 16;
+	qdCameraMatrix.z = 40;
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);
-	gfx_SetPalette(global_palette,32,0);
+	gfx_SetPalette(global_palette,sizeof_global_palette,0);
 	
 	qdActiveObject[0] = grid;
 	qdNumObjects = 1;
 	qdActiveSprite[0] = spr;
 	qdActiveSprite[1] = spr2; 
-	qdNumSprites = 2;
+	qdNumSprites = 0;
 		
 	gfx_SetColor(0xFF); 
 	

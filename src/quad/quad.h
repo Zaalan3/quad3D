@@ -1,5 +1,5 @@
-#ifndef renderer_3d_define 
-#define renderer_3d_define
+#ifndef QUADRENDERER  
+#define QUADRENDERER
 
 #include <stdbool.h>
 #include <stddef.h>

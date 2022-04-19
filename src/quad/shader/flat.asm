@@ -12,12 +12,22 @@ end macro
 
 ;-----------------------------------
 flat16: 
-repeat 4 
 	ld a,h 
 	exx 
 	ld d,a 
 	ld e,h 
-	ld a,i
+	ld b,iyl 
+	ld a,b 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+repeat 3 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,b 
 	ld (de),a 
 	add hl,sp 
 	exx 
@@ -29,15 +39,27 @@ end repeat
 	endShader flat16
 
 ;-----------------------------------
-flat16_clipped: 
-repeat 4  
+flat16_clipped:
 	ld a,h 
 	exx 
 	ld d,a 
 	cp a,canvas_height
-	jr nc,$+6 
+	jr nc,$+7 
+	ld e,h
+	ld b,iyl 
+	ld a,b 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de 
+repeat 3  
+	ld a,h 
+	exx 
+	ld d,a 
+	cp a,canvas_height
+	jr nc,$+5  
 	ld e,h 
-	ld a,i 
+	ld a,b 
 	ld (de),a 
 	add hl,sp 
 	exx 
@@ -56,7 +78,7 @@ repeat 2
 	exx 
 	ld d,a 
 	ld e,h 
-	ld a,i 
+	ld a,iyl
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -82,7 +104,7 @@ repeat 2
 	jr nc,$+13
 	ld d,a 
 	ld e,h 
-	ld a,i 
+	ld a,iyl 
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -100,13 +122,23 @@ end repeat
 	endShader flat32_clipped
 	
 ;-----------------------------------
-flat8: 
-repeat 4 
+flat8:
 	ld a,h 
 	exx 
 	ld d,a 
 	ld e,h 
-	ld a,i
+	ld b,iyl
+	ld a,b
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+repeat 3 
+	ld a,h 
+	exx 
+	ld d,a 
+	ld e,h 
+	ld a,b
 	ld (de),a 
 	add hl,sp 
 	exx 
@@ -119,14 +151,26 @@ end repeat
 	
 ;-----------------------------------
 flat8_clipped: 
-repeat 4 
 	ld a,h 
 	exx 
 	ld d,a 
 	cp a,canvas_height 
-	jr nc,$+6 
+	jr nc,$+7 
 	ld e,h 
-	ld a,i 
+	ld b,iyl 
+	ld a,b 
+	ld (de),a 
+	add hl,sp 
+	exx 
+	add hl,de
+repeat 3  
+	ld a,h 
+	exx 
+	ld d,a 
+	cp a,canvas_height 
+	jr nc,$+5 
+	ld e,h 
+	ld a,b 
 	ld (de),a 
 	add hl,sp 
 	exx 

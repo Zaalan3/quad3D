@@ -37,7 +37,7 @@ public shaderVloopIncB
 
 extern canvas_height
 
-shaderUloop:=$E10010 
+shaderUloop:=$E10010  
 
 shader equ iy+0
 light equ iy+1	
@@ -84,7 +84,7 @@ end macro
 
 shaderTable: 
 	shaderEntry bilerp16,4 
-	shaderEntry bilerp16_clipped,4
+	shaderEntry bilerp16_clipped,8
 	shaderEntry bilerp32,8 
 	shaderEntry bilerp32_clipped,8
 	shaderEntry bilerp8,2 
@@ -128,12 +128,12 @@ repeat 2
 	jr Z,$+3  
 	ld (de),a 
 	inc e 
-	add hl,sp 
+	add hl,sp
 end repeat 	
 	exx 
 	djnz .xloop
 	ld b,ixl 
-	add hl,sp  
+	add hl,sp
 	ld a,h 
 	dec c  
 	jr nz,.yloop 
@@ -142,7 +142,10 @@ endShader spriteRoutine
 	
 
 ;-----------------------------------
-; register state after below, consistent for all shaders
+;input: 
+; iy = pointer to face 
+; i = next face in cache
+; register state after below
 ; hl = y 
 ; de = dy 
 ; b = u counter 
@@ -153,8 +156,8 @@ endShader spriteRoutine
 ; spl = dx 
 ; sps = yi 
 ; ix = xi 
-; i = light 
-; iy = cached face pointer
+; iyl = light 
+; iyh = u0
 _callShader: 
 	; load shader to $E10010 
 	ld l,(shader) 
@@ -200,48 +203,48 @@ cont:
 	jr Z,$+4  
 	srl c 
 	
+	ld ix,_shaderRoutine
 	ld hl,(ax) 
-	ld (SMCloadAX),hl
+	ld (ix + SMCloadAX-_shaderRoutine),hl
 	
 	ld hl,(ay)
-	ld (SMCloadAY),hl
+	ld (ix + SMCloadAY-_shaderRoutine),hl
 	
 	ld hl,(cx) 
-	ld (SMCloadCX),hl  
-	ld a,$d4 
-	ld (SMCloadCX+2),a 
-	ex af,af'
+	ld (ix + SMCloadCX-_shaderRoutine),hl  
+	ld (ix + SMCloadCX+2-_shaderRoutine),$d4
 	
 	ld hl,(cy) 
-	ld (SMCloadCY),hl 
+	ld (ix + SMCloadCY-_shaderRoutine),hl 
 	
 	ld de,(by) ; de = dy
 	
 	ld h,(y0) 	;  sps = yi 
 	ld l,0 
 	ld.sis sp,hl
-	exx 
-	ex af,af' 
-	ld a,(x0) 	;ix = xi 
-	ld ixl,0 
-	ld ixh,a 
+	exx  
 	
-	ld bc,$D48000	;bc = texture ptr 
-	ld a,(v0) 
-	add a,b 
-	ld b,a 
-	ld a,(u0) 
-	ld c,a 
-	ld (SMCloadU0),a 
-	
-	ld de,$D40000	;de = screen ptr 
+	ld de,$D40000	;de' = screen ptr 
 	
 	ld hl,(bx) 	; spl = dx
 	ld sp,hl 
-	lea hl,ix+0
+	
+	ld a,(x0) 	;ix = xi
+	ld ixl,e 
+	ld ixh,a 
+	ld l,e		; hl' = x 
+	ld h,a 
+	
+	ld bc,$D48000	;bc' = texture ptr 
+	ld a,(v0) 
+	add a,b 
+	ld b,a 
+	ld a,(u0) 	
+	ld c,a 
 	
 	ld a,(light) 
-	ld i,a
+	ld iyl,a
+	ld iyh,c 
 	
 dispatch: 
 	exx 
@@ -307,17 +310,17 @@ _shaderRoutine:
 shaderVloopIncB: 
 	exx 
 	inc b
-	exx 	
+	exx 
+	
 shaderVloop: 
-	exx 
-	ld de,0
-SMCloadCX:=$-3
-	add ix,de 
-	lea hl,ix+0 
-	inc b	 ; v++ 
-	ld c,0 
-SMCloadU0:=$-1 
-	exx 
+	dec c 
+	jr nz,skipExit
+exitShader:
+	ld sp,0 
+	SMCloadSP:=$-3 
+	ret 
+	
+skipExit:
 	ld hl,0 
 SMCloadAY:=$-3 
 	add hl,de 
@@ -329,14 +332,16 @@ SMCloadAX:=$-3
 	ld hl,0
 SMCloadCY:=$-3	
 	add.sis hl,sp 
-	ld.sis sp,hl 
-	dec c 
-	jp nz,shaderUloop 
-exitShader:
-	ld sp,0 
-SMCloadSP:=$-3 
-	ret 
-	
+	ld.sis sp,hl
+	exx
+	ld de,0
+SMCloadCX:=$-3
+	add ix,de 
+	lea hl,ix+0 
+	inc b	 ; v++ 
+	ld c,iyh
+	exx   
+	jp shaderUloop 	
 	
 assert $ < $E308E0
 load _shaderRoutine_data: $-$$ from $$

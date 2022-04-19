@@ -5,6 +5,7 @@ extern _qdNumSprites
 extern _qdActiveObject
 extern _qdNumObjects
 
+extern _qdCameraMatrix
 extern _setCameraPosition
 extern _projectVertices
 extern _projectSprites
@@ -125,6 +126,7 @@ _qdRender:
 	ld (cachePointer),bc
 	
 	; load camera matrix
+	ld iy,_qdCameraMatrix
 	call _setCameraPosition
 	
 ; process sprites 
@@ -467,11 +469,13 @@ faceloop:
 	ld c,l 
 	ld de,(y0)
 	or a,a 
-	sbc hl,de 
+	sbc hl,de
+	ld sp,hl 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
+	add hl,sp 
 	bit 2,a 
 	jr Z,$+3
 	add hl,hl 
@@ -487,6 +491,7 @@ faceloop:
 	add hl,hl
 	add hl,hl
 	add hl,hl
+	add hl,de 
 	bit 2,a 
 	jr Z,$+3
 	add hl,hl 
@@ -511,10 +516,12 @@ faceloop:
 	ld de,(x0)
 	or a,a 
 	sbc hl,de 
+	ld sp,hl 
 	add hl,hl
 	add hl,hl
 	add hl,hl
 	add hl,hl
+	add hl,sp 
 	bit 2,a 
 	jr Z,$+3
 	add hl,hl
@@ -531,6 +538,7 @@ faceloop:
 	add hl,hl
 	add hl,hl
 	add hl,hl
+	add hl,de 
 	bit 2,a 
 	jr Z,$+3
 	add hl,hl
@@ -584,14 +592,31 @@ renderFaces:
 	add ix,de 
 	add ix,de
 	
-	ld de,(ix+0)
+	ld hl,(ix+0)
 	push ix-2 
 .loop:
+	bit 7,h 
+	jr z,.skip
+	
+	pop hl 
+	pop bc 
+.emptyloop:
+	dec bc 
+	bit 7,b
+	jq nz,return
+	ld de,(hl)
+	dec hl
+	dec hl
 	bit 7,d 
-	jr nz,.skip
-	; de*20
-	ld h,d 
-	ld l,e 
+	jr nz,.emptyloop 
+	push bc 
+	push hl
+	ex de,hl
+
+.skip:
+	; hl*20
+	ld d,h 
+	ld e,l 
 	add hl,hl
 	add hl,hl
 	add hl,hl
@@ -604,27 +629,12 @@ renderFaces:
 	
 	ld iy,_qdFaceCache
 	add iy,de 
-	ld de,(iy+18) 
-	push de 
+	ld hl,(iy+18) 
+	ld i,hl  
 	call _callShader 
-	pop de 
+	ld hl,i
 	jq .loop
-
-.skip:
 	
-	pop ix 
-	pop hl 
-	ld de,(ix+0)
-	
-	ld bc,1 
-	or a,a 
-	sbc hl,bc 
-	push hl 
-	pea ix-2 
-	jq p,.loop
-	
-	pop hl
-	pop hl
 return:
 	pop ix 
 	pop hl 

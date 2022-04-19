@@ -1,7 +1,7 @@
 palettes:
   - name: global_palette
     fixed-entries:
-      - color: {index: 0xFF, r: 255, g: 255, b: 255}
+      - image: rgbi.png 
     images: automatic
 
 converts:

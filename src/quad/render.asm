@@ -463,8 +463,8 @@ faceloop:
 	ld (ty0),a
 	
 	ld a,(tshader)
-	; cy = y1 - y0 
-	ld hl,(y1) 
+	; cy = y3 - y0 
+	ld hl,(y3) 
 	ld b,h 
 	ld c,l 
 	ld de,(y0)
@@ -481,8 +481,8 @@ faceloop:
 	add hl,hl 
 	ld (tcy),hl 
 	
-	; by = y3 - y0 
-	ld hl,(y3) 
+	; by = y1 - y0 
+	ld hl,(y1) 
 	or a,a 
 	sbc hl,de 
 	ld d,h  
@@ -497,7 +497,7 @@ faceloop:
 	add hl,hl 
 	ld (tby),hl 
 	
-	; ay = y0 - y1 - y3 + y2 = y2 - by - y1 
+	; ay = y0 - y1 - y3 + y2 = y2 - by - y3 
 	ld hl,(y2) 
 	or a,a 
 	sbc hl,de 
@@ -509,8 +509,8 @@ faceloop:
 	add hl,hl 
 	ld (tay),hl
 	
-	;cx = x1 - x0 
-	ld hl,(x1) 
+	;cx = x3 - x0 
+	ld hl,(x3) 
 	ld b,h 
 	ld c,l 
 	ld de,(x0)
@@ -528,8 +528,8 @@ faceloop:
 	ld (tcx),l 
 	ld (tcx+1),h
 	
-	;bx = x3 - x0 
-	ld hl,(x3) 
+	;bx = x1 - x0 
+	ld hl,(x1) 
 	or a,a 
 	sbc hl,de
 	ld d,h  

@@ -1,3 +1,4 @@
+section .text 
 
 public _qdBlitCanvas
 public _qdClearCanvas

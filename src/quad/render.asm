@@ -1,3 +1,5 @@
+section .text 
+
 public _qdRender
 
 extern _qdActiveSprite

@@ -1,3 +1,5 @@
+section .text 
+
 public _qdInit
 public _qdClose
 
@@ -55,11 +57,6 @@ _qdInit:
 	pop bc
 	
 	di 
-	push ix 
-	; unlock ports
-	call port_setup 
-	call port_privilege_unlock 
-	pop ix 
 	
 	; load routines into fastRam 
 	ld de,_shaderRoutine
@@ -80,8 +77,5 @@ _qdInit:
 	ret 
 	
 _qdClose:
-	push ix 
-	call port_privilege_lock 
-	pop ix 
 	jp _gfx_End
 	

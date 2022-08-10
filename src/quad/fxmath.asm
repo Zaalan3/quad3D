@@ -1,3 +1,5 @@
+section .text 
+
 public _sqrtInt
 public _fxMul 
 public _fxDiv 

@@ -1,3 +1,4 @@
+section .text 
 	
 extern shaderVloop 
 extern shaderVloopIncB 

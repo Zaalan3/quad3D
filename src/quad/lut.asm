@@ -1,3 +1,5 @@
+section .text 
+
 public _fixedSinTable 
 public _ZinvLUT
 

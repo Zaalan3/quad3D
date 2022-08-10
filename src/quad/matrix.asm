@@ -1,3 +1,5 @@
+section .text 
+
 public _qdTransformVertices
 public _projectVertices
 public _projectSprites
@@ -70,8 +72,7 @@ sys equ ix+15
 sye equ ix+17 
 
 
-
-mulRow:=$E10010 
+mulRow:=$E30B00  ; E10010 or $E30B00 depending on OS revision
 
 ;ix = vertex 
 ;iy = matrix row 

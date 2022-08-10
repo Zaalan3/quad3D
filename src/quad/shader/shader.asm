@@ -1,3 +1,4 @@
+section .text 
 
 public _callShader 
 public _shaderRoutine
@@ -37,7 +38,7 @@ public shaderVloopIncB
 
 extern canvas_height
 
-shaderUloop:=$E10010  
+shaderUloop:=$E30B00   ; $E10010 or $E30B00 depending on OS revision
 
 shader equ iy+0
 light equ iy+1	

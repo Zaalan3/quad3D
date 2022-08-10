@@ -1,3 +1,5 @@
+section .text 
+
 public _qdEulerToMatrix 
 
 extern _fixedSin

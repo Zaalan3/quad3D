@@ -1,4 +1,4 @@
-section .text 
+section .rodata 
 
 public _fixedSinTable 
 public _ZinvLUT

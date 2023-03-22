@@ -220,10 +220,11 @@ _setCameraPosition:
 	pop ix
 	ret
 
+; object translation
 tx: rb 3
 ty: rb 3
 tz: rb 3
-
+; object center offset 
 offx: rb 2
 offy: rb 2
 offz: rb 3
@@ -239,21 +240,26 @@ _qdTransformVertices:
 	ld a,$e3 
 	ld mb,a 
 	
+	ld hl,(offx) 
 	ld de,128 
-	ld hl,(tx) 
-	add hl,de 
-	ld.sis (SMCLoadX - $e30000),hl
+	add hl,de
+	ld.sis (SMCLoadX - $e30000),hl 
 	
-	ld hl,(ty) 
-	add hl,de 
-	ld.sis (SMCLoadX - $e30000),hl
+	ld hl,(offy) 
+	add hl,de
+	ld.sis (SMCLoadY - $e30000),hl
 	
-	ld hl,(tz) 
-	add hl,de 
-	ld.sis (SMCLoadX - $e30000),hl
+	ld hl,(offz) 
+	add hl,de
+	ld.sis (SMCLoadZ - $e30000),hl
 	
 	ld a,$d0
 	ld mb,a 
+	
+	ld de,mulRow
+	ld hl,mulRowVertex_src
+	ld bc,mulRowVertex_len
+	ldir
 	
 	ld iy,(ix+6) 
 	ld hl,(ix+9) 
@@ -262,14 +268,18 @@ _qdTransformVertices:
 .loop:
 	exx 
 	call _matrixRow0Multiply
-	ld (iy+0),l  
+	push hl 
 	call _matrixRow1Multiply
-	ld (iy+1),l 
+	push hl  
 	call _matrixRow2Multiply
-	ld (iy+2),l  
+	ld (iy+2),l
+	pop hl 
+	ld (iy+1),l 
+	pop hl 
+	ld (iy+0),l 
 	lea ix,ix+3 ; next vertex 
 	lea iy,iy+3 
-	exx 
+	exx
 	or a,a 
 	sbc hl,de
 	jr nz,.loop

@@ -46,7 +46,8 @@ _qdActiveSprite:=$D50400
 
 _qdInit: 
 	; initialize screen 
-	; sets screen buffer to $D52C00. $D40000 reserved for canvas and texture page( so no double buffering ) 
+	; sets screen buffer to $D52C00. $D40000 reserved for canvas and texture page( so no double buffering by default)
+	; note: possible to double buffer if using 160x240 interlace trick
 	call	_gfx_Begin
 	call	_gfx_ZeroScreen
 	call	_gfx_SwapDraw
@@ -60,6 +61,7 @@ _qdInit:
 	
 	di 
 	
+	; unlock ports for SHA256 scratch area at $E10010
 	call port_setup 
 	call port_unlock 
 	

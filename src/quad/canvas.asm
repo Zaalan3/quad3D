@@ -35,7 +35,10 @@ _qdBlitCanvas:
 	ld hl,canvas+canvas_offset
 	ld bc,0
 	exx 
-	ld hl,screen + 60*320 + 80 
+	pop de 
+	pop hl 
+	push hl 
+	push de
 	ld de,320
 	ld b,canvas_height
 .loop: 

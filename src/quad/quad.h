@@ -13,6 +13,11 @@
 #include "def3d.h" 
 #include "matrix.h"
 
+/* 
+	TODO: proper usage documentation 
+	
+*/ 
+
 #define loadTextureMapCompressed(ptr) zx7_Decompress((void *)0xD48000,(void *)ptr)
 
 // camera matrix
@@ -41,7 +46,7 @@ void qdInit(void);
 void qdClose(void);
 
 // blits the Canvas to the Screen. 
-void qdBlitCanvas(void); 
+void qdBlitCanvas(uint8_t* buffer); 
 
 // clears the canvas
 void qdClearCanvas(void); 

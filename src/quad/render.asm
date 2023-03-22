@@ -154,19 +154,18 @@ processSprites:
 	ld (tvstart),hl
 	ld h,l 
 	
-	;delta = 2.65 * z 
+	;delta = 2.5 * z 
 	ld l,a 
 	add hl,hl
-	ld d,a 
-	ld e,166 
-	mlt de
+	ld de,0 
+	ld e,a 
+	srl e 
 	add hl,de
 	ld (tdelta),hl 
+	
 	or a,a 
-	sbc hl,hl 
-	ld l,a 
+	sbc hl,de 
 	; depth bucket 
-	add hl,hl
 	add hl,hl
 	dec hl 
 	push hl 

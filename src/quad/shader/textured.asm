@@ -20,7 +20,6 @@ repeat 4
 	ld d,a 
 	ld e,h 
 	ld a,(bc) 
-	and a,iyl
 	ld (de),a 
 	inc c 
 	add hl,sp 
@@ -42,7 +41,6 @@ repeat 2
 	jr nc,$+7
 	ld e,h 
 	ld a,(bc) 
-	and a,iyl
 	ld (de),a 
 	inc c 
 	add hl,sp 
@@ -62,7 +60,6 @@ repeat 2
 	ld d,a 
 	ld e,h 
 	ld a,(bc)
-	and a,iyl	
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -90,7 +87,6 @@ repeat 2
 	ld d,a
 	ld e,h 
 	ld a,(bc)
-	and a,iyl
 	ld (de),a 
 	inc e 
 	ld (de),a 
@@ -116,7 +112,6 @@ repeat 4
 	ld d,a 
 	ld e,h 
 	ld a,(bc) 
-	and a,iyl
 	ld (de),a 
 	inc c 
 	inc c 
@@ -139,7 +134,6 @@ repeat 2
 	jr nc,$+7
 	ld e,h 
 	ld a,(bc) 
-	and a,iyl
 	ld (de),a 
 	inc c 
 	inc c

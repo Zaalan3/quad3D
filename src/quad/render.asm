@@ -333,7 +333,10 @@ faceloop:
 	cp a,outOOB 
 	jq z,skipFace 
 	; shader is clipped if TOP|BOTTOM
-	ld b,(shader) 
+	ld b,(shader)
+	sla b
+	sla b
+	sla b
 	tst a, outTop + outBottom
 	jr Z,$+3
 	inc b 

@@ -3,15 +3,19 @@
 
 // type defines 
 
+typedef enum { 
+	SHADER_TEXTURED = 0, 
+	SHADER_FLAT, 
+	SHADER_TRANS
+} SHADER_TYPE; 
+
 // 3 bytes
+// object centers measured from <128,128,128>
 typedef struct { 
 	uint8_t x; 
 	uint8_t y; 
 	uint8_t z;
 } qdVertex; 
-
-#define	SHADER_TEXTURED 0
-#define SHADER_FLAT 8
  
 // 12 bytes 
 typedef struct {

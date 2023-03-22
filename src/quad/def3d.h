@@ -30,8 +30,8 @@ typedef struct {
 	int16_t x; 
 	int16_t y;
 	int16_t z;
-	uint16_t vertnum;
-	uint16_t facenum; 
+	uint16_t numVerts;
+	uint16_t numFaces; 
 	qdVertex* vertex;
 	qdFace* face;
 } qdObject; 

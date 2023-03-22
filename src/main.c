@@ -17,14 +17,22 @@
 
 extern qdObject grid;
 extern qdObject monkey;  
-extern qdObject zelda;  
+extern qdObject zelda;
+
+qdVertex tempVerts[550]; 
 
 int main(void)
 {
 	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
+	
+	uint8_t ty = 0;
+	
+	qdMatrix tempMatrix = {0};
+	
 	bool last5 = false;
+	
 	qdSprite spr = {0,20,-30,0,0,8,8}; 
 	qdSprite spr2 = {20,20,-30,16,0,8,8}; 
 	qdObject* currentModel = &grid; 
@@ -36,6 +44,7 @@ int main(void)
 	gfx_SetPalette(global_palette,sizeof_global_palette,0);
 	
 	qdActiveObject[0] = grid;
+	qdActiveObject[0].vertex = tempVerts;
 	qdNumObjects = 1;
 	qdActiveSprite[0] = spr;
 	qdActiveSprite[1] = spr2; 
@@ -57,7 +66,6 @@ int main(void)
 	// model showcase loop 
 	kb_SetMode(MODE_3_CONTINUOUS);
 	while(!kb_IsDown(kb_KeyClear)) {
-		qdSetCameraAngle(ax,ay,az);
 		
 		if(kb_IsDown(kb_Key4)) { 
 			qdCameraMatrix.x--; 
@@ -89,12 +97,15 @@ int main(void)
 			
 			if(currentModel == &grid) { 
 				qdActiveObject[0] = zelda;
+				qdActiveObject[0].vertex = tempVerts;
 				currentModel = &zelda;
 			} else if(currentModel == &zelda) { 
 				qdActiveObject[0] = monkey;
+				qdActiveObject[0].vertex = tempVerts;
 				currentModel = &monkey;
 			} else { 
 				qdActiveObject[0] = grid;
+				qdActiveObject[0].vertex = tempVerts;
 				currentModel = &grid;
 				qdNumSprites = 2; 
 			} 
@@ -104,24 +115,36 @@ int main(void)
 			last5 = false; 
 		} 
 		
+		qdEulerToMatrix(&tempMatrix,0,ty,0);
+		ty += 2;
+		
+		timer_Set(1,0); 
+		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP);
+		
+		qdTransformVertices(&tempMatrix,currentModel->vertex,tempVerts,qdActiveObject[0].numVerts);
+		
+		timer_Disable(1); 
+		int time1 = timer_Get(1);
+		
+		qdSetCameraAngle(ax,ay,az);
 
 		timer_Set(1,0); 
 		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP); 
 		qdRender(); 
 		timer_Disable(1); 
-		int time = timer_Get(1); 
+		int time2 = timer_Get(1); 
 		
 		gfx_Wait();
-		qdBlitCanvas();
+		qdBlitCanvas(&gfx_vbuffer[60][80]);
 		
-		gfx_SetTextXY(0,0);
-		gfx_PrintUInt(time,8);
-		gfx_PrintChar(' '); 
-		gfx_PrintUInt(ax,3);
-		gfx_PrintChar(' '); 
+		gfx_SetTextXY(1,0);
+		gfx_PrintUInt(time2,8);
+		gfx_SetTextXY(70,0); 
+		gfx_PrintUInt(qdActiveObject[0].numVerts,3);
+		gfx_SetTextXY(280,0);
 		gfx_PrintUInt(ay,3);
-		gfx_PrintChar(' '); 
-		gfx_PrintUInt(az,3);
+		gfx_SetTextXY(0,16);
+		gfx_PrintUInt(time1,8);
 
 	} 
 		

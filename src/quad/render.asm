@@ -256,7 +256,7 @@ processSprites:
 	
 	ld ix,$E30B80
 	ld (cachePointer),iy
-;----------------------------------------
+;---------------------------------------------------------
 ; process 3D objects 
 processObjects:
 	ld a,(_qdNumObjects)
@@ -653,7 +653,6 @@ return:
 	ret 
 	
 ;------------------------------------
-	
 ; hl = min(hl,de) (16 bit)
 minHLDE: 
 	or a,a 
@@ -664,7 +663,7 @@ minHLDE:
 	add hl,de
 	ret 
 
-
+; correct offscreen UV coords
 correctU: 
 	ld (tx0),canvas_offset 
 	call correctUV 

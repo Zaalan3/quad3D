@@ -17,9 +17,9 @@ extern _gfx_SwapDraw
 extern _gfx_SetDraw 
 extern _gfx_End
 
-extern port_setup
-extern port_privilege_unlock
-extern port_privilege_lock
+extern port_setup 
+extern port_unlock 
+extern port_lock 
 
 extern _shaderRoutine
 extern _shaderRoutine_len
@@ -31,6 +31,8 @@ extern _matrixRoutine_len
 
 extern _qdNumObjects
 extern _qdNumSprites 
+
+
 
 ;variable defines 
 
@@ -58,6 +60,9 @@ _qdInit:
 	
 	di 
 	
+	call port_setup 
+	call port_unlock 
+	
 	; load routines into fastRam 
 	ld de,_shaderRoutine
 	ld hl,_shaderRoutine_src
@@ -77,5 +82,6 @@ _qdInit:
 	ret 
 	
 _qdClose:
+	call port_lock
 	jp _gfx_End
 	

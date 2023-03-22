@@ -38,7 +38,7 @@ public shaderVloopIncB
 
 extern canvas_height
 
-shaderUloop:=$E30B00   ; $E10010 or $E30B00 depending on OS revision
+shaderUloop:=$E10010   ; $E10010 or $E30B00 depending on OS revision
 
 shader equ iy+0
 light equ iy+1	

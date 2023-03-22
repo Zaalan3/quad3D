@@ -24,13 +24,12 @@ int main(void)
 	uint8_t ay = 128;
 	uint8_t ax = 0; 
 	uint8_t az = 0;
+	bool last5 = false;
 	qdSprite spr = {0,20,-30,0,0,8,8}; 
 	qdSprite spr2 = {20,20,-30,16,0,8,8}; 
 	qdObject* currentModel = &grid; 
-
-	qdCameraMatrix.x = 0;
-	qdCameraMatrix.y = 16;
-	qdCameraMatrix.z = 40;
+	
+	qdSetCameraPosition(0,16,40); 
 	
     qdInit();
 	loadTextureMapCompressed(tileset_compressed);
@@ -57,7 +56,7 @@ int main(void)
 	
 	// model showcase loop 
 	kb_SetMode(MODE_3_CONTINUOUS);
-	while(!kb_IsDown(kb_KeyClear)) { 
+	while(!kb_IsDown(kb_KeyClear)) {
 		qdSetCameraAngle(ax,ay,az);
 		
 		if(kb_IsDown(kb_Key4)) { 
@@ -85,7 +84,7 @@ int main(void)
 		} 
 		
 		
-		if(kb_IsDown(kb_Key5)) { 
+		if(kb_IsDown(kb_Key5) && !last5) { 
 			qdNumSprites = 0;
 			
 			if(currentModel == &grid) { 
@@ -93,13 +92,18 @@ int main(void)
 				currentModel = &zelda;
 			} else if(currentModel == &zelda) { 
 				qdActiveObject[0] = monkey;
-				currentModel = &monkey;	
+				currentModel = &monkey;
 			} else { 
 				qdActiveObject[0] = grid;
 				currentModel = &grid;
 				qdNumSprites = 2; 
 			} 
-		}  
+			
+			last5 = true;
+		} else if ( !kb_IsDown(kb_Key5) ) { 
+			last5 = false; 
+		} 
+		
 
 		timer_Set(1,0); 
 		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP); 

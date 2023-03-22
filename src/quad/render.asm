@@ -20,8 +20,6 @@ extern _qdClearCanvas
 extern _currentShader
 extern _callShader
 
-extern _ZinvLUT
-
 extern canvas_width
 extern canvas_height
 extern canvas_offset
@@ -156,13 +154,22 @@ processSprites:
 	ld (tvstart),hl
 	ld h,l 
 	
-	;delta = 4*z 
+	;delta = 2.65 * z 
 	ld l,a 
 	add hl,hl
-	add hl,hl 
+	ld d,a 
+	ld e,166 
+	mlt de
+	add hl,de
 	ld (tdelta),hl 
+	or a,a 
+	sbc hl,hl 
+	ld l,a 
+	; depth bucket 
+	add hl,hl
+	add hl,hl
 	dec hl 
-	push hl ; depth bucket 
+	push hl 
 	
 	ld (tshader),$80 ; sprite shader
 	;clip sxs  

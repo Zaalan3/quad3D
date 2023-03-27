@@ -19,7 +19,11 @@ extern qdObject grid;
 extern qdObject monkey;  
 extern qdObject zelda;
 
-qdVertex tempVerts[550]; 
+qdObject active;
+qdVertex tempVerts[550];
+
+qdSprite spr = {0,20,-30,0,0,8,8}; 
+qdSprite spr2 = {20,20,-30,16,0,8,8}; 
 
 int main(void)
 {
@@ -28,30 +32,22 @@ int main(void)
 	uint8_t az = 0;
 	
 	uint8_t ty = 0;
-	
-	qdMatrix tempMatrix = {0};
-	
+	uint8_t upTimer = 0;
+	qdMatrix tempMatrix = {0};	
 	bool last5 = false;
 	
-	qdSprite spr = {0,20,-30,0,0,8,8}; 
-	qdSprite spr2 = {20,20,-30,16,0,8,8}; 
+	active = grid;
+	active.vertex = tempVerts;
+	qdSprite sprites[2] = {spr,spr2};
 	qdObject* currentModel = &grid; 
-	
-	qdSetCameraPosition(0,16,40); 
-	
+		
     qdInit();
-	loadTextureMapCompressed(tileset_compressed);
+	loadTextureMapCompressed(0,tileset_compressed);
 	gfx_SetPalette(global_palette,sizeof_global_palette,0);
 	
-	qdActiveObject[0] = grid;
-	qdActiveObject[0].vertex = tempVerts;
-	qdNumObjects = 1;
-	qdActiveSprite[0] = spr;
-	qdActiveSprite[1] = spr2; 
-	qdNumSprites = 0;
+	qdSetCameraPosition(0,16,40);
 		
 	gfx_SetColor(0xFF); 
-	
 	// white box to show bounds of rendering area 
 	gfx_HorizLine(80,59,160);
 	gfx_HorizLine(80,180,160);
@@ -61,11 +57,11 @@ int main(void)
 	gfx_SetTextFGColor(0xFF);
 	gfx_SetTextTransparentColor(0xFE);
 	gfx_SetColor(0xFF);
-	
-	
+
 	// model showcase loop 
 	kb_SetMode(MODE_3_CONTINUOUS);
 	while(!kb_IsDown(kb_KeyClear)) {
+		qdSetCameraAngle(ax,ay,az);
 		
 		if(kb_IsDown(kb_Key4)) { 
 			qdCameraMatrix.x--; 
@@ -93,21 +89,19 @@ int main(void)
 		
 		
 		if(kb_IsDown(kb_Key5) && !last5) { 
-			qdNumSprites = 0;
 			
 			if(currentModel == &grid) { 
-				qdActiveObject[0] = zelda;
-				qdActiveObject[0].vertex = tempVerts;
+				active = zelda;
+				active.vertex = tempVerts;
 				currentModel = &zelda;
 			} else if(currentModel == &zelda) { 
-				qdActiveObject[0] = monkey;
-				qdActiveObject[0].vertex = tempVerts;
+				active = monkey;
+				active.vertex = tempVerts;
 				currentModel = &monkey;
 			} else { 
-				qdActiveObject[0] = grid;
-				qdActiveObject[0].vertex = tempVerts;
+				active = grid;
+				active.vertex = tempVerts;
 				currentModel = &grid;
-				qdNumSprites = 2; 
 			} 
 			
 			last5 = true;
@@ -121,16 +115,29 @@ int main(void)
 		timer_Set(1,0); 
 		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP);
 		
-		qdTransformVertices(&tempMatrix,currentModel->vertex,tempVerts,qdActiveObject[0].numVerts);
+		qdTransformVertices(&tempMatrix,currentModel->vertex,tempVerts,active.numVerts);
 		
 		timer_Disable(1); 
 		int time1 = timer_Get(1);
 		
-		qdSetCameraAngle(ax,ay,az);
-
+		/*
+		if(upTimer++ == 60) { 
+			if (active.uOffset == 32)
+				active.uOffset = 0; 
+			else 
+				active.uOffset += 16;
+			
+			upTimer = 0;
+		} */ 
+		
 		timer_Set(1,0); 
-		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP); 
-		qdRender(); 
+		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP);
+		
+		qdClearCanvas(); 
+		qdRenderObject(&active);
+		qdRenderSprites(sprites,2);
+		qdDraw(); 
+		
 		timer_Disable(1); 
 		int time2 = timer_Get(1); 
 		
@@ -140,7 +147,7 @@ int main(void)
 		gfx_SetTextXY(1,0);
 		gfx_PrintUInt(time2,8);
 		gfx_SetTextXY(70,0); 
-		gfx_PrintUInt(qdActiveObject[0].numVerts,3);
+		gfx_PrintUInt(active.numVerts,3);
 		gfx_SetTextXY(280,0);
 		gfx_PrintUInt(ay,3);
 		gfx_SetTextXY(0,16);

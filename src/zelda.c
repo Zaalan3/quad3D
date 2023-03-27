@@ -3,7 +3,7 @@
 
 static qdVertex verts[546];
 static qdFace faces[254];
-qdObject zelda = {0,0,0,546,254,verts,faces};
+qdObject zelda = {0,0,0,546,254,verts,faces,0,0};
 
 static qdFace faces[254] = { 
 	{SHADER_TEXTURED,0xFF,0,0,0,1,2,3},

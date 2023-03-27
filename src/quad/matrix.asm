@@ -20,9 +20,6 @@ extern _getReciprocal
 extern _MultiplyHLBC
 extern _recipTable
 
-extern _qdActiveSprite
-extern _qdNumSprites
-
 extern _ZinvLUT
 
 ; outcodes 
@@ -220,7 +217,7 @@ _setCameraPosition:
 	pop ix
 	ret
 
-; object translation
+; camera translation
 tx: rb 3
 ty: rb 3
 tz: rb 3
@@ -454,11 +451,21 @@ projloop:
 	
 ;---------------------------------------------------------	
 ; in: b = sprite count 
+; ix = sprite ptr
 _projectSprites: 
-	ld ix,_qdActiveSprite ; ix = pointer to current sprite 
-	ld iy,_qdVertexCache  ; iy = vertex cache pointer 
+	; load 16-bit matrix routine
+	ld iy,_qdVertexCache  	; iy = vertex cache pointer
+	push ix
 	push bc 
-	ld c,b 
+	push bc
+		
+	ld de,mulRow
+	ld hl,mulRowPosition_src
+	ld bc,mulRowPosition_len 
+	ldir
+	
+	pop bc 
+	ld c,b
 spriteloop: 
 	exx 
 	; get z' 
@@ -584,6 +591,7 @@ spriteloop:
 	dec c  ; count-- 
 	jq nz,spriteloop
 	pop bc 
+	pop ix
 	ret 
 	
 .skipSpritePop: 

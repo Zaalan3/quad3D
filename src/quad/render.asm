@@ -1,28 +1,10 @@
 section .text 
 
-public _qdRender
+public _qdResetCache
+public _qdRenderSprites
+public _qdRenderObject 
+public _qdDraw
 
-extern _qdActiveSprite
-extern _qdNumSprites
-extern _qdActiveObject
-extern _qdNumObjects
-
-extern _qdCameraMatrix
-extern _setCameraPosition
-extern _projectVertices
-extern _projectSprites
-
-extern _qdVertexCache
-extern _qdFaceBucket
-extern _qdFaceCache
-extern _qdClearCanvas
-
-extern _currentShader
-extern _callShader
-
-extern canvas_width
-extern canvas_height
-extern canvas_offset
 
 ; outcodes 
 outTop equ 01000b
@@ -30,8 +12,6 @@ outBottom equ 0100b
 outLeft equ 0010b
 outRight equ 0001b 
 outOOB equ $FF
-
-;  vars 
 
 ; face 
 shader equ iy+0
@@ -43,7 +23,9 @@ vt1 equ iy+6
 vt2 equ iy+8
 vt3 equ iy+10
 	
-; stack vars 
+; stack vars at $E30B80
+ixVars:=$E30B80 
+
 numFaces equ ix+0 
 cachePointer equ ix+3 
 bucketMin equ ix+6 
@@ -102,14 +84,9 @@ tustart equ iy+6
 tvstart equ iy+9
 tdelta equ iy+12 
 
-_qdRender: 
-	or a,a 
-	sbc hl,hl 
-	add hl,sp
-	ld sp,$E30BFC 
-	push hl
+_qdResetCache: 
 	push ix
-	ld ix,$E30B80
+	ld ix,ixVars
 	 
 	; init face buckets 
 	ld hl,_qdFaceBucket
@@ -124,20 +101,30 @@ _qdRender:
 	ld (bucketMin),bc 
 	ld bc,_qdFaceCache 
 	ld (cachePointer),bc
+	pop ix 
+	ret
 	
+; process sprites 
+_qdRenderSprites:
 	; load camera matrix
 	ld iy,_qdCameraMatrix
 	call _setCameraPosition
+	pop de 
+	pop iy 
+	pop hl  
+	push hl 
+	push iy  
+	push de
 	
-; process sprites 
-processSprites:
-	ld a,(_qdNumSprites) 
-	or a,a 
-	jq Z,processObjects 
-	ld b,a 	; b = sprite count
+	ld a,l
+	or a,a 				; return if numSprites = 0 
+	ret z 
+	ld b,a 				; b = sprite count
+	
+	push ix
+	lea ix,iy+0 		; ix = sprite ptr
 	call _projectSprites
-	ld ix,_qdActiveSprite ; ix = pointer to sprite
-	ld iy,_qdFaceCache 
+	ld iy,(ixVars+3)	; iy = (cachePointer)
 .loop: 
 	exx 
 	; skip if sprite depth = $FF 
@@ -155,7 +142,8 @@ processSprites:
 	ld h,l 
 	
 	;delta = 2.5 * z 
-	ld l,a 
+	ld l,a
+	push hl
 	add hl,hl
 	ld de,0 
 	ld e,a 
@@ -163,9 +151,9 @@ processSprites:
 	add hl,de
 	ld (tdelta),hl 
 	
-	or a,a 
-	sbc hl,de 
 	; depth bucket 
+	pop hl
+	add hl,hl
 	add hl,hl
 	dec hl 
 	push hl 
@@ -216,9 +204,9 @@ processSprites:
 	ld (tylen),a 
 	
 	
-	pop hl ; hl = depth bucket
+	pop hl ; de = depth bucket
 	push ix 
-	ld ix,$E30B80 ; ix = stack vars
+	ld ix,ixVars
 	
 	; update min and max buckets 
 	ex de,hl
@@ -254,27 +242,35 @@ processSprites:
 	dec b 
 	jq nz,.loop
 	
-	ld ix,$E30B80
 	ld (cachePointer),iy
-;---------------------------------------------------------
-; process 3D objects 
-processObjects:
-	ld a,(_qdNumObjects)
-	or a,a 
-	jq Z,return
-	ld b,a
-	ld iy,_qdActiveObject 
+	pop ix 
+	ret 
 	
-	ld hl,-3 
+	
+;---------------------------------------------------------
+; process 3D object
+_qdRenderObject:
+	ld iy,_qdCameraMatrix
+	call _setCameraPosition
+	
+	pop hl 
+	pop iy 
+	push iy 
+	push hl
+	push ix
+	
+	or a,a 
+	sbc hl,hl
 	add hl,sp 
 	ld (StoreSP),hl
-objectloop: 
-	pea iy+16 
+
+	ld hl,(iy+16) ; load uv offsets
+	ld i,hl
 	call _projectVertices
 cacheFaces: 
 	ld de,(iy+8) ;face count
 	ld iy,(iy+13) ; face pointer
-	ld ix,$E30B80
+	ld ix,ixVars
 	ld hl,1 
 	ex.sis hl,de
 faceloop:
@@ -342,12 +338,21 @@ faceloop:
 	inc b 
 	
 	; copy light,u0 & v0,x0 & y0 
-	ld hl,(light)
+	ld hl,i 
+	ld a,(u0)
+	add a,l 
+	ld l,a 
+	ld a,(v0) 
+	add a,h 
+	ld h,a 
+	ld a,(light) 
 	ld (facePointer),iy 
 	ld iy,(cachePointer)
 	
-	ld (tlight),hl 
-	ld (tshader),b 
+	ld (tlight),a 
+	ld (tu0),l 
+	ld (tv0),h 
+	ld (tshader),b
 	
 	; area = (x2-x0)*(y1-y3) + (y2-y0)*(x3-x1)
 	ld hl,(x2) 
@@ -582,15 +587,24 @@ skipFace:
 	jq nz,faceloop 
 	ld sp,0
 StoreSP:=$-3 
-	pop iy 
-	dec b 
-	jq nz,objectloop
+	pop ix 
+	ret 
 		
+		
+
 ; iterates through face buckets and renders faces
-renderFaces: 
-	call _qdClearCanvas 
+_qdDraw: 
 	ld a,$FF 
 	ld (_currentShader),a
+	
+	or a,a 
+	sbc hl,hl 
+	add hl,sp
+	ld sp,$E30BFC 
+	push hl
+	push ix
+	ld ix,ixVars
+	
 	ld hl,(bucketMax)
 	ld de,(bucketMin)
 	or a,a 
@@ -650,7 +664,8 @@ return:
 	pop ix 
 	pop hl 
 	ld sp,hl
-	ret 
+	jq _qdResetCache 
+	
 	
 ;------------------------------------
 ; hl = min(hl,de) (16 bit)
@@ -700,3 +715,25 @@ correctUV:
 	ld h,a
 	ret 
 	
+	
+extern _qdActiveSprite
+extern _qdNumSprites
+extern _qdActiveObject
+extern _qdNumObjects
+
+extern _qdCameraMatrix
+extern _setCameraPosition
+extern _projectVertices
+extern _projectSprites
+
+extern _qdVertexCache
+extern _qdFaceBucket
+extern _qdFaceCache
+extern _qdClearCanvas
+
+extern _currentShader
+extern _callShader
+
+extern canvas_width
+extern canvas_height
+extern canvas_offset

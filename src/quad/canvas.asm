@@ -13,8 +13,6 @@ canvas_width:=160
 canvas_height:=120 
 canvas_offset:=48
 
-screen:=$D52C00 
-
 gfxFillScreenFastCode:=$E30800 
 
 ;coopts gfx_FillScreen fast code @ e30800

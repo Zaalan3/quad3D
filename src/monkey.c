@@ -3,7 +3,7 @@
 
 static qdVertex verts[507];
 static qdFace faces[500];
-qdObject monkey = {0,0,0,507,500,verts,faces};
+qdObject monkey = {0,0,0,507,500,verts,faces,0,0};
 static  qdFace faces[500] = { 
 	{SHADER_TEXTURED,0xFF,0,0,46,0,2,44},
 	{SHADER_TEXTURED,0xFF,0,0,3,1,47,45},

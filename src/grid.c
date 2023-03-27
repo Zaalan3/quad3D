@@ -5,7 +5,7 @@
 static qdVertex verts[45];
 static qdFace faces[32];
 
-qdObject grid = {0,0,0,45,32,verts,faces};
+qdObject grid = {0,0,0,45,32,verts,faces,0,0};
 
 static qdFace faces[32] = { 
 	{SHADER_TEXTURED,0xFF,0,0,0,1,10,9},

@@ -14,6 +14,8 @@ public _fixedHLmulBC
 public _fixedHLdivBC
 public _fixedSin
 
+public mulAngle 
+
 extern _fixedSinTable
 
 
@@ -87,6 +89,7 @@ _fixedHLdivBC:
 	add hl,hl
 	add hl,hl
 	add hl,hl	; fallthrough to normal division routine
+	
 ;------------------------------------------------
 _DivideHLBC:
 ; Performs signed integer division
@@ -210,33 +213,81 @@ _fixedHLmulBC:
 	ret 
 
 ;------------------------------------------------
-; returns fixed point sine of l
+; returns 4.12 fixed point sine of hl(range 0..1023)
 _fxSin: 
 	pop bc 
 	pop hl 
 	push hl 
 	push bc
-_fixedSin: 
-
-	ld a,l 	
-	or a,a 
-	sbc hl,hl 
-	ld l,a 
-	res 7,l
-	ld bc,_fixedSinTable
-	add hl,bc
-	ld b,(hl)
-	or a,a 
-	sbc hl,hl
-	ld l,b
-	rla  
-	ret nc		; return if angle is positive, so it doesn't need to be negated
+_fixedSin:
+	ld a,h 
+	and a,00000011b
+	ld h,a
+	bit 1,h 
+	jr nz,.negative 
+	bit 0,h 
+	jr z,.nosymmetry
 	ex de,hl 
-	or a,a
+	ld hl,512 
+	or a,a 
+	sbc.sis hl,de 
+.nosymmetry:
+	ex.sis de,hl
+	ld hl,_fixedSinTable
+	add hl,de
+	add hl,de
+	ld hl,(hl) 
+	ret 
+.negative: 
+	res 1,h 
+	call _fixedSin
+	ex de,hl 
+	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
 	ret 
 	
+; 4.12 fixed multiply hl*bc
+mulAngle:
+	ex de,hl
+	ld l,e 
+	ld h,c 
+	mlt hl 
+	ld a,h 
 	
+	ld h,d 
+	ld l,b 
+	mlt hl 
+	bit 7,b 
+	jr z,$+6  
+	or a,a 
+	sbc.sis hl,de 
+	bit 7,d 
+	jr z,$+6 
+	or a,a 
+	sbc.sis hl,bc 
 	
+repeat 8 
+	add hl,hl
+end repeat 
+	ld l,a 
+	
+	ld a,d 
+	ld d,b 
+	ld b,a 
+	mlt de 
+	mlt bc 
+	add hl,de 
+	add hl,bc 
+	
+repeat 4 
+	add hl,hl 
+end repeat 
+	
+	dec sp 
+	push hl 
+	inc sp 
+	pop hl 
+	
+	ret
 	

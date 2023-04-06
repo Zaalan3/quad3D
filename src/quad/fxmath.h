@@ -9,10 +9,10 @@ int fxMul(int x,int y);
 
 int fxDiv(int num,int dem); 
 
-// angle in 360 degrees/256 (1.40625)  
-int fxSin(uint8_t angle); 
+// angle in 360 degrees/1024 (1.40625)  
+int fxSin(uint16_t angle); 
 
-#define fxCos(a) fxSin(a+64)  
+#define fxCos(a) fxSin(a+256)  
 
 
 #endif

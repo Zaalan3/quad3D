@@ -27,17 +27,17 @@ qdSprite spr2 = {20,20,-30,16,0,8,8};
 
 int main(void)
 {
-	uint8_t ay = 128;
-	uint8_t ax = 0; 
-	uint8_t az = 0;
+	uint16_t ay = 512;
+	uint16_t ax = 0; 
+	uint16_t az = 0;
 	
-	uint8_t ty = 0;
+	uint16_t ty = 0;
 	uint8_t upTimer = 0;
 	qdMatrix tempMatrix = {0};	
 	bool last5 = false;
 	
 	active = grid;
-	active.vertex = tempVerts;
+	//active.vertex = tempVerts;
 	qdSprite sprites[2] = {spr,spr2};
 	qdObject* currentModel = &grid; 
 		
@@ -92,15 +92,15 @@ int main(void)
 			
 			if(currentModel == &grid) { 
 				active = zelda;
-				active.vertex = tempVerts;
+				//active.vertex = tempVerts;
 				currentModel = &zelda;
 			} else if(currentModel == &zelda) { 
 				active = monkey;
-				active.vertex = tempVerts;
+				//active.vertex = tempVerts;
 				currentModel = &monkey;
 			} else { 
 				active = grid;
-				active.vertex = tempVerts;
+				//active.vertex = tempVerts;
 				currentModel = &grid;
 			} 
 			
@@ -109,6 +109,7 @@ int main(void)
 			last5 = false; 
 		} 
 		
+		/*
 		qdEulerToMatrix(&tempMatrix,0,ty,0);
 		ty += 2;
 		
@@ -119,7 +120,7 @@ int main(void)
 		
 		timer_Disable(1); 
 		int time1 = timer_Get(1);
-		
+		*/ 
 		/*
 		if(upTimer++ == 60) { 
 			if (active.uOffset == 32)
@@ -151,7 +152,7 @@ int main(void)
 		gfx_SetTextXY(280,0);
 		gfx_PrintUInt(ay,3);
 		gfx_SetTextXY(0,16);
-		gfx_PrintUInt(time1,8);
+		//gfx_PrintUInt(time1,8);
 
 	} 
 		

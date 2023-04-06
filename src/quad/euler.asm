@@ -2,8 +2,8 @@ section .text
 
 public _qdEulerToMatrix 
 
+extern mulAngle
 extern _fixedSin
-extern _fixedHLmulBC 
 extern __frameset
  
 matrix equ ix+6 
@@ -37,48 +37,42 @@ _qdEulerToMatrix:
 	call __frameset 
 	ld iy,(matrix) 
 	
-	ld l,(ay) 
-	ld a,l 
-	add a,64 
-	ex af,af' 
+	ld hl,(ay)
 	call _fixedSin
 	ld (s1),hl
-	ex af,af' 
-	ld l,a 
+	ld hl,(ay)
+	ld de,256 
+	add hl,de
 	call _fixedSin 
 	ld (c1),hl 
 	
-	ld l,(ax)
-	ld a,l 
-	add a,64 
-	ex af,af'
+	ld hl,(ax) 
 	call _fixedSin
 	ld (s2),hl 
 	ld (m21),hl
-	ex af,af' 
-	ld l,a 
+	ld hl,(ax) 
+	ld de,256 
+	add hl,de 
 	call _fixedSin 
 	ld (c2),hl 
 	
-	ld l,(az)
-	ld a,l 
-	add a,64 
-	ex af,af'
+	ld hl,(az)
 	call _fixedSin
 	ld (s3),hl 
-	ex af,af' 
-	ld l,a 
+	ld hl,(az)
+	ld de,256 
+	add hl,de
 	call _fixedSin 
 	ld (c3),hl 
 	
 	ld bc,(c1) 
-	call _fixedHLmulBC
+	call mulAngle
 	push hl 
 	ld hl,(s1) 
 	ld bc,(s2) 
-	call _fixedHLmulBC
+	call mulAngle
 	ld bc,(s3)
-	call _fixedHLmulBC
+	call mulAngle
 	ex de,hl 
 	pop hl 
 	or a,a 
@@ -87,7 +81,7 @@ _qdEulerToMatrix:
 	
 	ld hl,(c2) 
 	ld bc,(s3) 
-	call _fixedHLmulBC
+	call mulAngle
 	ex de,hl 
 	or a,a 
 	sbc hl,hl
@@ -96,44 +90,44 @@ _qdEulerToMatrix:
 	
 	ld hl,(s1)
 	ld bc,(c3) 
-	call _fixedHLmulBC
+	call mulAngle
 	push hl 
 	ld hl,(c1) 
 	ld bc,(s2) 
-	call _fixedHLmulBC
+	call mulAngle
 	ld bc,(s3)
-	call _fixedHLmulBC
+	call mulAngle
 	pop de 
 	add hl,de 
 	ld (m02),hl 
 
 	ld hl,(s3)
 	ld bc,(c1) 
-	call _fixedHLmulBC
+	call mulAngle
 	push hl 
 	ld hl,(c3) 
 	ld bc,(s2) 
-	call _fixedHLmulBC
+	call mulAngle
 	ld bc,(s1)
-	call _fixedHLmulBC
+	call mulAngle
 	pop de 
 	add hl,de 
 	ld (m10),hl 
 	
 	ld hl,(c2) 
 	ld bc,(c3) 
-	call _fixedHLmulBC 
+	call mulAngle 
 	ld (m11),hl 
 	
 	ld hl,(s1)
 	ld bc,(s3) 
-	call _fixedHLmulBC
+	call mulAngle
 	push hl 
 	ld hl,(c1) 
 	ld bc,(s2) 
-	call _fixedHLmulBC
+	call mulAngle
 	ld bc,(c3)
-	call _fixedHLmulBC
+	call mulAngle
 	ex de,hl 
 	pop hl 
 	or a,a 
@@ -142,7 +136,7 @@ _qdEulerToMatrix:
 	
 	ld hl,(c2) 
 	ld bc,(s1) 
-	call _fixedHLmulBC
+	call mulAngle
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
@@ -152,10 +146,11 @@ _qdEulerToMatrix:
 
 	ld hl,(c2) 
 	ld bc,(c1) 
-	call _fixedHLmulBC 
+	call mulAngle 
 	ld (m22),l 
 	ld (m22+1),h
 	
 	ld sp,ix 
 	pop ix 
 	ret
+ 

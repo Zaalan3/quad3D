@@ -19,6 +19,7 @@ extern _qdCameraMatrix
 extern _getReciprocal 
 extern _MultiplyHLBC
 extern _recipTable
+extern mulAngle
 
 extern _ZinvLUT
 
@@ -79,30 +80,9 @@ mulRowPosition_src:
 	ld b,3 
 .loop: 
 	exx
-	ld de,(ix+0) 
+	ld hl,(ix+0) 
 	ld bc,(iy+0) 
-	ld h,d
-	ld l,b 
-	mlt hl 
-	ld a,l 
-	bit 7,d 
-	jr Z,$+3 
-	sub a,c  
-	bit 7,b 
-	jr Z,$+3  
-	sub a,e
-	ld h,e 
-	ld l,c 
-	mlt hl
-	ld l,h  
-	ld h,a 
-	ld a,b 
-	ld b,d  
-	ld d,a 
-	mlt de 
-	mlt bc 
-	add hl,de 
-	add hl,bc  	
+	call mulAngle
 	add.sis hl,sp
 	ld.sis sp,hl
 	exx 
@@ -133,6 +113,10 @@ mulRowVertex_src:
 	ld e,c 
 	mlt de
 	add hl,de
+repeat 4
+	sra h 
+	rr l
+end repeat 
 	add.sis hl,sp 
 	ld.sis sp,hl 
 	inc ix 
@@ -238,7 +222,7 @@ _qdTransformVertices:
 	ld mb,a 
 	
 	ld hl,(offx) 
-	ld de,128 
+	ld de,128
 	add hl,de
 	ld.sis (SMCLoadX - $e30000),hl 
 	

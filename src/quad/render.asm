@@ -242,7 +242,7 @@ _qdRenderSprites:
 	dec b 
 	jq nz,.loop
 	
-	ld (cachePointer),iy
+	ld (ixVars+3),iy
 	pop ix 
 	ret 
 	

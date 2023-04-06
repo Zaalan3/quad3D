@@ -1,6 +1,6 @@
 
 //24 bytes
-// 8.8 fixed point matrix with a 16 bit position
+// 4.12 fixed point matrix with a 16 bit position
 typedef struct { 
 	int16_t m00,m01,m02; 
 	int16_t m10,m11,m12;
@@ -13,5 +13,5 @@ typedef struct {
 void qdTransformVertices(qdMatrix* matrix,qdVertex* src,qdVertex* dest,int num); 
 
 // builds a matrix from provided angles
-void qdEulerToMatrix(qdMatrix* matrix,uint8_t ax,uint8_t ay,uint8_t az); 
+void qdEulerToMatrix(qdMatrix* matrix,uint16_t ax,uint16_t ay,uint16_t az); 
 

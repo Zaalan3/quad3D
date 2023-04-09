@@ -39,7 +39,7 @@ typedef struct {
 } qdObject; 
 
 
-#define spriteSize(n) (n>>2)
+#define spriteSize(n) (n>>1)
 // 19 bytes 
 typedef struct { 
 	int16_t x,y,z; 	// world position 

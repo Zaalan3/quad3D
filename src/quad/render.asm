@@ -407,9 +407,9 @@ faceloop:
 	jq Z,loadFacePointer 
 	
 	
-	ld de,128  
+	ld de,64  
 	ld a,(tshader) 
-	; if area>-128  then use half size shader
+	; if area>=-64  then use half size shader
 	add hl,de 
 	bit 7,h 
 	jq nz,.skipHalf
@@ -417,9 +417,8 @@ faceloop:
 .skipHalf: 
 	add hl,de
 	add hl,de
-	; if area<-512  then use double pixel shader
 	add hl,de
-	add hl,de 
+	; if area<-256  then use double pixel shader
 	bit 7,h 
 	jq Z,.skipChunky
 	set 1,a 

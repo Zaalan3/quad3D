@@ -22,8 +22,8 @@ extern qdObject zelda;
 qdObject active;
 qdVertex tempVerts[550];
 
-qdSprite spr = {0,20,-30,0,0,8,8}; 
-qdSprite spr2 = {20,20,-30,16,0,8,8}; 
+qdSprite spr = {0,20,-30,0,0,spriteSize(16),spriteSize(16)}; 
+qdSprite spr2 = {20,20,-30,16,0,spriteSize(32),spriteSize(16)}; 
 
 int main(void)
 {
@@ -121,7 +121,7 @@ int main(void)
 		timer_Disable(1); 
 		int time1 = timer_Get(1);
 		*/ 
-		/*
+		
 		if(upTimer++ == 60) { 
 			if (active.uOffset == 32)
 				active.uOffset = 0; 
@@ -129,14 +129,16 @@ int main(void)
 				active.uOffset += 16;
 			
 			upTimer = 0;
-		} */ 
+		} 
+		
+		qdClearCanvas(); 
 		
 		timer_Set(1,0); 
 		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP);
-		
-		qdClearCanvas(); 
 		qdRenderObject(&active);
 		qdRenderSprites(sprites,2);
+		gfx_SetTextXY(100,0);
+		gfx_PrintUInt(*((uint24_t*)0xE30B80),3); // # faces drawn
 		qdDraw(); 
 		
 		timer_Disable(1); 

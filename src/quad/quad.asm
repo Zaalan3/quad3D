@@ -14,6 +14,11 @@ _qdVertexCache:=$D48000 + 256*96
 _qdCameraMatrix:=$D50000 	; 24 bytes
 _qdFaceCache:=$D50000 + 44	; 20 bytes per entry
 
+; running count of memory locations used: 
+; D40000 - D52C00
+; E30880 - E30BFF 
+; D006C0 - D007C0
+
 _qdInit: 
 	; initialize screen 
 	; sets screen buffer to $D52C00. $D40000 reserved for canvas and texture page( so no double buffering by default)

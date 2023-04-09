@@ -30,6 +30,7 @@ outLeft equ 0010b
 outRight equ 0001b 
 outOOB equ $FF
 
+; matrix struct
 m00 equ iy+0 
 m01 equ iy+2
 m02 equ iy+4
@@ -43,9 +44,7 @@ cx equ iy+18
 cy equ iy+20 
 cz equ iy+22
 
-x equ ix+0 
-y equ ix+2 
-z equ ix+4 
+; vertex cache 
 
 xs equ iy+0
 ys equ iy+2 

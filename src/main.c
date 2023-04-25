@@ -37,7 +37,7 @@ int main(void)
 	bool last5 = false;
 	
 	active = grid;
-	//active.vertex = tempVerts;
+	active.vertex = tempVerts;
 	qdSprite sprites[2] = {spr,spr2};
 	qdObject* currentModel = &grid; 
 		
@@ -92,15 +92,15 @@ int main(void)
 			
 			if(currentModel == &grid) { 
 				active = zelda;
-				//active.vertex = tempVerts;
+				active.vertex = tempVerts;
 				currentModel = &zelda;
 			} else if(currentModel == &zelda) { 
 				active = monkey;
-				//active.vertex = tempVerts;
+				active.vertex = tempVerts;
 				currentModel = &monkey;
 			} else { 
 				active = grid;
-				//active.vertex = tempVerts;
+				active.vertex = tempVerts;
 				currentModel = &grid;
 			} 
 			
@@ -109,9 +109,9 @@ int main(void)
 			last5 = false; 
 		} 
 		
-		/*
+		
 		qdEulerToMatrix(&tempMatrix,0,ty,0);
-		ty += 2;
+		ty += 8;
 		
 		timer_Set(1,0); 
 		timer_Enable(1,TIMER_CPU,TIMER_NOINT,TIMER_UP);
@@ -120,7 +120,7 @@ int main(void)
 		
 		timer_Disable(1); 
 		int time1 = timer_Get(1);
-		*/ 
+		
 		
 		if(upTimer++ == 60) { 
 			if (active.uOffset == 32)
@@ -154,7 +154,7 @@ int main(void)
 		gfx_SetTextXY(280,0);
 		gfx_PrintUInt(ay,3);
 		gfx_SetTextXY(0,16);
-		//gfx_PrintUInt(time1,8);
+		gfx_PrintUInt(time1,8);
 
 	} 
 		

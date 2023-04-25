@@ -1,5 +1,7 @@
 section .text 
 
+;TODO: convert to 4.12 fixed point 
+
 public _qdTransformVertices
 public _projectVertices
 public _projectSprites
@@ -71,6 +73,19 @@ sye equ ix+17
 
 mulRow:=$E10010  ; E10010 or $E30B00 depending on OS revision
 
+macro shlhl 
+	repeat 4 
+	add hl,hl 
+	end repeat 
+end macro 
+
+macro shrhl 
+	repeat 4 
+	sra h 
+	rr l 
+	end repeat 
+end macro
+
 ;ix = vertex 
 ;iy = matrix row 
 ;destroys b' & iy 
@@ -112,10 +127,6 @@ mulRowVertex_src:
 	ld e,c 
 	mlt de
 	add hl,de
-repeat 4
-	sra h 
-	rr l
-end repeat 
 	add.sis hl,sp 
 	ld.sis sp,hl 
 	inc ix 
@@ -223,14 +234,17 @@ _qdTransformVertices:
 	ld hl,(offx) 
 	ld de,128
 	add hl,de
+	shlhl 
 	ld.sis (SMCLoadX - $e30000),hl 
 	
 	ld hl,(offy) 
 	add hl,de
+	shlhl	
 	ld.sis (SMCLoadY - $e30000),hl
 	
 	ld hl,(offz) 
 	add hl,de
+	shlhl
 	ld.sis (SMCLoadZ - $e30000),hl
 	
 	ld a,$d0
@@ -248,11 +262,22 @@ _qdTransformVertices:
 .loop:
 	exx 
 	call _matrixRow0Multiply
+	xor a,a 
+	shrhl
+	adc a,l
+	ld l,a 
 	push hl 
 	call _matrixRow1Multiply
+	xor a,a 
+	shrhl
+	adc a,l
+	ld l,a
 	push hl  
 	call _matrixRow2Multiply
-	ld (iy+2),l
+	xor a,a 
+	shrhl
+	adc a,l
+	ld (iy+2),a
 	pop hl 
 	ld (iy+1),l 
 	pop hl 
@@ -296,6 +321,7 @@ _projectVertices:
 	ld bc,(offx) 
 	add hl,de
 	add hl,bc
+	shlhl
 	ld.sis (SMCLoadX - $e30000),hl 
 	
 	call _matrixRow1Multiply
@@ -303,6 +329,7 @@ _projectVertices:
 	ld bc,(offy)
 	add hl,de
 	add hl,bc
+	shlhl
 	ld.sis (SMCLoadY - $e30000),hl
 	
 	call _matrixRow2Multiply
@@ -310,6 +337,7 @@ _projectVertices:
 	ld bc,(offz)
 	add hl,de
 	add hl,bc
+	shlhl
 	ld.sis (SMCLoadZ - $e30000),hl
 	ld a,$d0
 	ld mb,a 
@@ -336,6 +364,7 @@ projloop:
 	exx 
 	; get z'
 	call _matrixRow2Multiply
+	shrhl
 	ld (depth),l 
 	
 	xor a,a 
@@ -351,7 +380,8 @@ projloop:
 	add hl,hl  
 	ld de,_ZinvLUT
 	add hl,de 
-	ld hl,(hl) 
+	ld hl,(hl)
+	
 	push hl
 	push hl
 	
@@ -359,6 +389,7 @@ projloop:
 	call _matrixRow1Multiply 
 	pop bc 
 	call mulHLBC
+	shrhl
 	ex de,hl
 	ld hl,canvas_height/2
 	or a,a 
@@ -394,6 +425,7 @@ projloop:
 	;de*bc
 	pop bc 
 	call mulHLBC
+	shrhl
 	ld de,256/2
 	add hl,de
 	ld (xs),l

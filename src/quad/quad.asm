@@ -38,7 +38,11 @@ _qdInit:
 	
 	; unlock ports for SHA256 scratch area at $E10010
 	call port_setup 
-	call port_unlock 
+	call port_unlock
+	in a,($06) 
+	set 2,a 
+	out ($06),a
+	call port_lock 
 	
 	; load routines into fastRam 
 	ld de,_shaderRoutine
@@ -55,7 +59,6 @@ _qdInit:
 	ret 
 	
 _qdClose:
-	call port_lock
 	jp _gfx_End
 	
 	

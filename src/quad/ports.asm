@@ -113,11 +113,11 @@ port_old:
 .unlock:
 	call	.unlockhelper
 .unlockfinish:
-	ld	a,$D0 		; $D0007C0 is new priv top 
+	ld	a,$D1 		; $D0007C0 is new priv top 
 	out0	($25),a
-	ld  a,$07 
+	ld  a,$FF 
 	out0 	($24),a 
-	ld 	a,$C0
+	ld 	a,$FF
 	out0 	($23),a
 	
 	in0	a,($06)
@@ -172,9 +172,6 @@ port_new:
 .lock:
 	xor	a,a
 	out0	($28),a
-	in0	a,($06)
-	res	2,a
-	out0	($06),a
 	ld	a,$D1 			; reset priv range
 	out0	($25),a
 	ld  a,$88 
